@@ -115,3 +115,4 @@ export function EntryItem({ entry, isTrash, isSelected, onToggleSelect, onEdit, 
     </div>
   )
 }
+  
