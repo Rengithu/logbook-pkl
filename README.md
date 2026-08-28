@@ -31,9 +31,6 @@ Aplikasi ini telah dimodernisasi menggunakan **React (Vite) + TypeScript** di si
 - **Generator Dokumen:** `docx`, `pdfkit`.
 - **Pemroses Gambar:** `sharp`.
 
-## Known Issues
-- `image-size` (dependency untuk proses gambar) punya 2 celah keamanan DoS (level High) terkait parsing file ICNS/JXL/HEIF. Fix resmi (`image-size` v2+) memerlukan migrasi backend ke ESM. Karena aplikasi ini dijalankan secara lokal oleh masing-masing pengguna (bukan server publik yang menerima upload dari pihak tak dikenal), risiko eksploitasinya rendah. Rekomendasi: hindari upload file berformat ICNS/HEIF/JXL yang tidak familiar sampai isu ini diperbaiki.
-
 ## 🚀 Panduan Menjalankan Aplikasi (Lokal)
 
 Pastikan Anda telah menginstal [Node.js](https://nodejs.org) (minimal versi 18).
@@ -97,3 +94,9 @@ Jika Anda ingin membagikan aplikasi ini ke teman agar ia bisa memiliki laporan P
 **Catatan Trouble-shooting:**
 - Jika ekspor PDF/Word gagal, pastikan foto yang dilampirkan tidak rusak/korup.
 - Jika antarmuka (*UI*) berubah kosong (putih) di browser, pastikan Anda telah menjalankan perintah `npm run build:start` dan bukan sekadar `npm start`, karena file statis React (`client/dist`) harus di-*build* terlebih dahulu sebelum disajikan oleh server.
+
+## ⚠️ Known Issues
+
+- **`image-size` (dependency untuk proses gambar)** memiliki 2 celah keamanan tingkat *High* terkait *Denial of Service* (infinite loop) saat memproses file berformat ICNS, JXL, dan HEIF ([GHSA-w3rx-r6r6-pgpr](https://github.com/advisories/GHSA-w3rx-r6r6-pgpr), [GHSA-5p2g-fcmc-qvqq](https://github.com/advisories/GHSA-5p2g-fcmc-qvqq)). Versi yang sudah menambal celah ini (`image-size` v2+) bersifat ESM-only, sedangkan backend aplikasi ini masih menggunakan CommonJS, sehingga upgrade langsung akan menyebabkan error.
+  - **Tingkat risiko**: Rendah untuk pemakaian normal. Aplikasi ini dijalankan secara lokal oleh masing-masing pengguna (bukan server publik yang menerima upload dari pihak tak dikenal), sehingga eksploitasi celah ini memerlukan pengguna sendiri secara sengaja mengunggah file gambar berbahaya.
+  - **Rekomendasi sementara**: Hindari mengunggah file berformat ICNS/HEIF/JXL yang tidak familiar sampai isu ini diperbaiki (misalnya dengan migrasi ke ESM atau mengganti library).
