@@ -1,4 +1,4 @@
-import { useRef, useEffect, forwardRef, useState } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useAppStore } from '../store/appStore'
 import * as api from '../api/client'
 
@@ -57,7 +57,7 @@ export function Header() {
   )
 }
 
-const ProfilePopover = forwardRef<HTMLDivElement, { isOpen: boolean }>(({ isOpen }, ref) => {
+const ProfilePopover = ({ isOpen, ref }: { isOpen: boolean; ref?: React.Ref<HTMLDivElement> }) => {
   const profile = useAppStore((s) => s.profile)
   const setProfile = useAppStore((s) => s.setProfile)
   const closeProfilePopover = useAppStore((s) => s.closeProfilePopover)
@@ -136,4 +136,4 @@ const ProfilePopover = forwardRef<HTMLDivElement, { isOpen: boolean }>(({ isOpen
       </form>
     </div>
   )
-})
+}
