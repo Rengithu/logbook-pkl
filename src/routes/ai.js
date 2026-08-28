@@ -3,7 +3,8 @@ const router = express.Router();
 const db = require('../db/sqlite');
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const baseUrl = process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/models';
+const GEMINI_URL = `${baseUrl}/${GEMINI_MODEL}:generateContent`;
 
 function getApiKey() {
   const profile = db.prepare('SELECT geminiApiKey FROM profile WHERE id = 1').get();

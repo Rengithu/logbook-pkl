@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: parseInt(process.env.MAX_TASK_UPLOAD_SIZE) || 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /^(image\/(jpeg|png|webp|gif)|application\/pdf|application\/(msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|vnd\.ms-powerpoint|vnd\.openxmlformats-officedocument\.presentationml\.presentation)|text\/plain|application\/zip)$/;
     if (!allowed.test(file.mimetype)) {

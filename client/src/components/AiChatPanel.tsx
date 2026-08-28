@@ -42,7 +42,8 @@ export function AiChatPanel() {
       if (profile?.apiProvider === 'openrouter') {
         if (!profile.openRouterApiKey) throw new Error('API Key OpenRouter belum diatur di Pengaturan.')
 
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const openRouterUrl = import.meta.env.VITE_OPENROUTER_URL || 'https://openrouter.ai/api/v1/chat/completions'
+        const res = await fetch(openRouterUrl, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${profile.openRouterApiKey}`,
@@ -51,7 +52,7 @@ export function AiChatPanel() {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: 'qwen2.5-coder:7b',
+            model: import.meta.env.VITE_DEFAULT_AI_MODEL || 'qwen2.5-coder:7b',
             messages: [
               { role: 'system', content: 'Anda adalah asisten AI yang membantu siswa dalam kegiatan Praktek Kerja Lapangan (PKL).' },
               ...messages,
@@ -69,7 +70,7 @@ export function AiChatPanel() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'qwen2.5-coder:7b',
+            model: import.meta.env.VITE_DEFAULT_AI_MODEL || 'qwen2.5-coder:7b',
             messages: [
               { role: 'system', content: 'Anda adalah asisten AI yang membantu siswa dalam kegiatan Praktek Kerja Lapangan (PKL).' },
               ...messages,
