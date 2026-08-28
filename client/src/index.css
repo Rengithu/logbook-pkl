@@ -1,0 +1,10 @@
+/* Import the original application styles */
+@import './styles/style.css';
+
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('/fonts/MaterialSymbolsOutlined.ttf') format('truetype');
+}

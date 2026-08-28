@@ -1,0 +1,85 @@
+/* =========================================================
+   Gruvbox Material + Material 3 Design System (Dark & Light)
+   ========================================================= */
+
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  
+  /* Surface colors (Gruvbox Dark) */
+  --bg-base: #282828; /* bg0 */
+  --bg-surface: #32302f; /* bg0_s */
+  --bg-elevated: #3c3836; /* bg1 */
+  --bg-header: #282828; 
+  --border: #504945; /* bg2 */
+  --border-subtle: #3c3836; /* bg1 */
+
+  /* Typography (Gruvbox Dark) */
+  --fg-primary: #ebdbb2; /* fg1 */
+  --fg-heading: #fbf1c7; /* fg0 */
+  --fg-secondary: #d5c4a1; /* fg2 */
+  --fg-muted: #a89984; /* fg4 */
+
+  /* Primary Brand (Gruvbox Blue) */
+  --primary: #83a598; /* blue */
+  --primary-hover: #7daea3; 
+  --primary-fg: #1d2021; /* bg0_h - high contrast text on primary */
+  --primary-badge: rgba(131, 165, 152, 0.15); /* Tinted surface */
+
+  /* Accents (Gruvbox Dark) */
+  --accent-aqua: #8ec07c;
+  --accent-green: #b8bb26;
+  --accent-yellow: #fabd2f;
+  --accent-orange: #fe8019;
+  
+  /* Error / Danger (Gruvbox Dark) */
+  --danger: #fb4934; /* red */
+  --danger-hover: #ea6962;
+  --danger-bg: rgba(251, 73, 52, 0.15);
+  --danger-border: #cc241d;
+
+  /* Forms & Cards */
+  --input-bg: #1d2021; /* bg0_h (darker for inputs) */
+  --card-shadow: none; /* M3 flat surfaces */
+  --radius: 28px; /* M3 radii */
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  
+  /* Surface colors (Gruvbox Light) */
+  --bg-base: #fbf1c7; /* bg0 */
+  --bg-surface: #f2e5bc; /* bg0_s */
+  --bg-elevated: #ebdbb2; /* bg1 */
+  --bg-header: #fbf1c7;
+  --border: #d5c4a1; /* bg2 */
+  --border-subtle: #ebdbb2; /* bg1 */
+
+  /* Typography (Gruvbox Light) */
+  --fg-primary: #3c3836; /* fg1 */
+  --fg-heading: #282828; /* fg0 */
+  --fg-secondary: #504945; /* fg2 */
+  --fg-muted: #7c6f64; /* fg4 */
+
+  /* Primary Brand (Gruvbox Blue) */
+  --primary: #076678; /* blue */
+  --primary-hover: #45707a;
+  --primary-fg: #fbf1c7; /* bg0 - high contrast text on primary */
+  --primary-badge: rgba(7, 102, 120, 0.12);
+
+  /* Accents (Gruvbox Light) */
+  --accent-aqua: #427b58;
+  --accent-green: #79740e;
+  --accent-yellow: #b57614;
+  --accent-orange: #af3a03;
+  
+  /* Error / Danger (Gruvbox Light) */
+  --danger: #9d0006; /* red */
+  --danger-hover: #c14a4a;
+  --danger-bg: rgba(157, 0, 6, 0.1);
+  --danger-border: #cc241d;
+
+  /* Forms & Cards */
+  --input-bg: #f9f5d7; /* bg0_h (lighter for inputs) */
+  --card-shadow: none; /* M3 flat surfaces */
+  --radius: 28px; /* M3 radii */
+}

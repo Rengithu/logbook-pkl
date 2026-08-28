@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LogBook</title>
+<link rel="icon" type="image/png" href="./favicon.png">
+<!-- Google Fonts & Material Symbols -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&family=Google+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📘</text></svg>">
+<link rel="stylesheet" href="/css/main.css?v=2">
+<script src="/js/i18n.js"></script>
+</head>
+<body>
+<header class="app-header">
+  <div class="container header-inner">
+    <div class="brand">
+      <button type="button" class="btn-icon mobile-menu-btn" id="btnMobileMenu" aria-label="Buka Menu" style="display: none;">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <span class="material-symbols-outlined brand-logo">assignment</span>
+      <h1 class="brand-title">LogBook</h1>
+    </div>
+    
+    <div class="header-search-container">
+      <div class="header-search-box">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" id="globalSearchInput" placeholder="Telusuri di LogBook" autocomplete="off">
+        <button type="button" class="btn-icon btn-clear-search" id="globalSearchClear" style="display: none;" title="Hapus pencarian">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="header-actions">
+
+      <div class="profile-wrapper" style="position: relative; width: 48px; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 100;">
+        <button type="button" class="btn-icon header-icon-btn profile-btn" id="btnOpenProfileModal" title="Akun Profil" style="position: relative; z-index: 2; margin: 0; width: 100%; border-radius: 20px;">
+          <span class="material-symbols-outlined" style="font-size: 24px;">account_circle</span>
+        </button>
+
+      <!-- PROFILE POPOVER -->
+      <div id="profilePopover" class="profile-popover">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+          <div>
+            <h3 style="margin:0; font-size: 16px;" data-i18n="profile.title">Identitas Peserta PKL</h3>
+            <p class="hint" style="margin-top: 2px;" data-i18n="profile.subtitle">Otomatis muncul di laporan</p>
+          </div>
+          <button type="button" class="btn-close" id="btnCloseProfile" title="Tutup">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form id="profileForm">
+          <div class="form-row">
+            <label for="namaPeserta" data-i18n="profile.name">Nama Peserta Didik</label>
+            <input type="text" id="namaPeserta" required>
+          </div>
+          <div class="form-row">
+            <label for="tempatPkl" data-i18n="profile.place">Dunia Kerja / Tempat PKL</label>
+            <input type="text" id="tempatPkl" required>
+          </div>
+          <div class="form-row">
+            <label for="namaInstruktur" data-i18n="profile.instructor">Nama Instruktur</label>
+            <input type="text" id="namaInstruktur" required>
+          </div>
+          <div class="form-row">
+            <label for="namaPembimbing" data-i18n="profile.mentor">Nama Pembimbing</label>
+            <input type="text" id="namaPembimbing" required>
+          </div>
+
+          <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn btn-outline" id="btnCancelProfile" data-i18n="common.cancel">Batal</button>
+            <button type="submit" class="btn btn-primary">
+              <span class="material-symbols-outlined">save</span>
+              <span data-i18n="common.save">Simpan</span>
+            </button>
+          </div>
+        </form>
+      </div>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<div id="mobileOverlay" class="mobile-overlay"></div>
+<div class="app-layout">
+  <!-- SIDEBAR -->
+  <aside class="app-sidebar">
+    <nav class="sidebar-nav" style="position: relative;">
+      <div class="nav-active-indicator"></div>
+      <div class="nav-group">
+        <button class="nav-item active" data-tab="dashboard">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span data-i18n="nav.dashboard">Beranda</span>
+        </button>
+      </div>
+      
+      <div class="nav-group">
+        <button class="nav-item" data-tab="entries">
+          <span class="material-symbols-outlined">calendar_month</span>
+          <span data-i18n="nav.entries">Catatan Harian</span>
+        </button>
+        <button class="nav-item" data-tab="calendar">
+          <span class="material-symbols-outlined">event</span>
+          <span data-i18n="nav.calendar">Kalender</span>
+        </button>
+        <button class="nav-item" data-tab="tasks" data-view="active">
+          <span class="material-symbols-outlined">assignment</span>
+          <span data-i18n="nav.tasks">Manajemen Tugas</span>
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <button class="nav-item" id="btnNavTrash" data-tab="entries" data-view="trash">
+          <span class="material-symbols-outlined">delete</span>
+          <span data-i18n="nav.trash">Tempat Sampah</span>
+        </button>
+        <button class="nav-item" data-tab="settings" data-view="active">
+          <span class="material-symbols-outlined">settings</span>
+          <span data-i18n="nav.settings">Pengaturan</span>
+        </button>
+      </div>
+
+      <details class="nav-group widget-dropdown" style="margin-top: 16px;">
+        <summary class="nav-item-static" style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; color: var(--fg-secondary); cursor: pointer; list-style: none; user-select: none;">
+          <span class="material-symbols-outlined">donut_small</span>
+          <span style="font-weight: 500; font-size: 14px; flex-grow: 1;" data-i18n="sidebar.summary">Ringkasan</span>
+          <span class="material-symbols-outlined expand-icon" style="font-size: 20px; transition: transform 0.2s;">expand_more</span>
+        </summary>
+        <div class="sidebar-widget-content" style="padding: 4px 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-base); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+            <span style="font-size: 13px; color: var(--fg-muted);" data-i18n="sidebar.totalEntries">Total Catatan</span>
+            <span id="sidebarTotalEntries" style="font-size: 14px; font-weight: 600; color: var(--fg-primary);">0</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-base); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+            <span style="font-size: 13px; color: var(--fg-muted);" data-i18n="sidebar.pendingTasks">Tugas Tertunda</span>
+            <span id="sidebarPendingTasks" style="font-size: 14px; font-weight: 600; color: var(--danger);">0</span>
+          </div>
+          <button type="button" class="btn-outline-primary widget-btn" onclick="document.querySelector('[data-tab=\'tasks\']').click()" style="width: 100%; border-radius: 999px; padding: 8px 16px; border-color: var(--border); font-weight: 500; margin-top: 4px;" data-i18n="sidebar.openTasks">
+            Buka Tugas
+          </button>
+        </div>
+      </details>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="app-main-content">
+      <!-- DASHBOARD TAB -->
+      <section id="tab-dashboard" class="tab-panel active" style="padding: 24px;">
+        <div class="dashboard-header">
+          <h2 class="page-title" data-i18n="dashboard.title">Beranda</h2>
+          <p class="hint" data-i18n="dashboard.subtitle">Ringkasan aktivitas PKL dan tugas-tugasmu.</p>
+        </div>
+        
+        <div class="dashboard-grid">
+          <div class="stat-card stat-total">
+            <div class="stat-card-title"><span class="material-symbols-outlined" style="font-size: 18px;">task</span> <span data-i18n="dashboard.totalTasks">Total Tugas</span></div>
+            <div id="statTotalTasks" class="stat-card-value" style="color: var(--fg-primary);"><div class="skeleton skeleton-text" style="height: 32px; width: 40px; margin: 0; border-radius: 8px;"></div></div>
+          </div>
+          <div class="stat-card stat-todo">
+            <div class="stat-card-title"><span class="material-symbols-outlined" style="font-size: 18px;">pending_actions</span> <span data-i18n="dashboard.todo">Belum Mulai</span></div>
+            <div id="statTodo" class="stat-card-value" style="color: var(--warning);"><div class="skeleton skeleton-text" style="height: 32px; width: 40px; margin: 0; border-radius: 8px;"></div></div>
+          </div>
+          <div class="stat-card stat-progress">
+            <div class="stat-card-title"><span class="material-symbols-outlined" style="font-size: 18px;">cached</span> <span data-i18n="dashboard.inProgress">Proses</span></div>
+            <div id="statInProgress" class="stat-card-value" style="color: var(--primary);"><div class="skeleton skeleton-text" style="height: 32px; width: 40px; margin: 0; border-radius: 8px;"></div></div>
+          </div>
+          <div class="stat-card stat-done">
+            <div class="stat-card-title"><span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span> <span data-i18n="dashboard.done">Selesai</span></div>
+            <div id="statDone" class="stat-card-value" style="color: var(--success);"><div class="skeleton skeleton-text" style="height: 32px; width: 40px; margin: 0; border-radius: 8px;"></div></div>
+          </div>
+          <div class="stat-card stat-overdue">
+            <div class="stat-card-title"><span class="material-symbols-outlined" style="font-size: 18px;">error</span> <span data-i18n="dashboard.overdue">Overdue</span></div>
+            <div id="statOverdue" class="stat-card-value" style="color: var(--danger);"><div class="skeleton skeleton-text" style="height: 32px; width: 40px; margin: 0; border-radius: 8px;"></div></div>
+          </div>
+        </div>
+
+        <div style="margin-top: 32px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; margin: 0;" data-i18n="dashboard.upcoming">Tugas Mendatang</h3>
+          </div>
+          <!-- Subject Tabs Container -->
+          <div id="dashboardSubjectTabs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; scrollbar-width: none; -ms-overflow-style: none;">
+            <!-- Populated by JS -->
+          </div>
+          <style>#dashboardSubjectTabs::-webkit-scrollbar { display: none; }</style>
+          
+          <div id="upcomingTasksList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB ENTRIES -->
+      <section id="tab-entries" class="tab-panel">
+      <div style="padding: 16px 32px; width: 100%;">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title" data-i18n="entries.title">Daftar Catatan</h2>
+            <p class="hint" style="margin: 0;" data-i18n="entries.subtitle">Catat dan kelola aktivitas harianmu selama PKL di sini.</p>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <div class="m3-segmented-btn" id="entriesViewToggle">
+              <button class="seg-btn" data-view="list" title="Tampilan Daftar">
+                <span class="material-symbols-outlined check-icon">check</span>
+                <span class="material-symbols-outlined">view_list</span>
+              </button>
+              <button class="seg-btn" data-view="grid" title="Tampilan Grid">
+                <span class="material-symbols-outlined check-icon">check</span>
+                <span class="material-symbols-outlined">grid_view</span>
+              </button>
+            </div>
+            <button id="btnEmptyTrash" class="btn btn-outline" style="display: none; color: var(--danger); border-color: var(--danger-border); font-size: 13px; padding: 6px 12px;">
+              <span class="material-symbols-outlined" style="font-size: 16px;">delete_sweep</span> Kosongkan Tempat Sampah
+            </button>
+            <span id="entryCount" class="badge">0 entri</span>
+          </div>
+        </div>
+
+        <div id="entryList" class="entry-list" style="max-height: none;"></div>
+        <p id="emptyEntries" class="empty-state">Belum ada catatan. Tambahkan catatan harian dengan tombol Plus di pojok kanan.</p>
+      </div>
+  </section>
+
+  <!-- TASKS TAB (KANBAN) -->
+  <section id="tab-tasks" class="tab-panel">
+    <div style="padding: 16px 32px; width: 100%;">
+      <div class="page-header">
+        <div>
+          <h2 class="page-title" data-i18n="tasks.title">Papan Manajemen Tugas</h2>
+          <p class="hint" style="margin: 0;" data-i18n="tasks.subtitle">Catat dan pantau seluruh tugas dari sekolahmu di sini.</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+        </div>
+      </div>
+      
+      <div class="list-view-header">
+        <div class="list-view-columns" style="position: relative; align-items: center;">
+          <div class="list-col col-name" id="colSortTitle" style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--fg-primary); text-transform: none; font-size: 14px;">
+            <span data-i18n="tasks.col.title">Judul Tugas</span>
+            <div class="sort-indicator">
+              <span class="material-symbols-outlined" style="font-size: 16px;">arrow_downward</span>
+            </div>
+          </div>
+          <div class="list-col col-subject" style="text-transform: none; font-size: 14px; font-weight: 500;" data-i18n="tasks.col.subject">Mata Pelajaran</div>
+          <div class="list-col col-date" style="text-transform: none; font-size: 14px; font-weight: 500;" data-i18n="tasks.col.deadline">Deadline</div>
+          <div class="list-col col-status" style="text-transform: none; font-size: 14px; font-weight: 500;" data-i18n="tasks.col.status">Status</div>
+          <div class="list-col col-action" style="width: auto; justify-content: flex-end; gap: 8px; display: flex;">
+            <div class="custom-select-wrapper" id="filterDropdown" style="width: auto;">
+              <button class="btn-icon sort-btn-outline custom-select-trigger" title="Saring Tugas" style="width: 36px; height: 36px; border-radius: 50%; background: transparent; padding: 0; min-height: 0; display: flex; align-items: center; justify-content: center; border: none;">
+                <span class="material-symbols-outlined" style="font-size: 20px;">filter_list</span>
+              </button>
+              <div class="custom-select-dropdown" style="top: 100%; right: 0; left: auto; min-width: 200px;">
+                <div class="custom-select-options">
+                  <div class="custom-select-option" data-filter="all">
+                    <div class="option-label">Semua Tugas</div>
+                  </div>
+                  <div class="custom-select-option" data-filter="status_todo">
+                    <div class="option-label">Belum Mulai</div>
+                  </div>
+                  <div class="custom-select-option" data-filter="status_in_progress">
+                    <div class="option-label">Proses</div>
+                  </div>
+                  <div class="custom-select-option" data-filter="status_done">
+                    <div class="option-label">Selesai</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="custom-select-wrapper" id="sortDropdown" style="width: auto;">
+              <button class="btn-icon sort-btn-outline custom-select-trigger" title="Urutkan" style="width: 36px; height: 36px; border-radius: 50%; background: transparent; padding: 0; min-height: 0; display: flex; align-items: center; justify-content: center; border: none;">
+                <span class="material-symbols-outlined" style="font-size: 20px;">sort</span>
+              </button>
+              <div class="custom-select-dropdown" style="top: 100%; right: 0; left: auto; min-width: 200px;">
+                <div class="custom-select-options">
+                  <div class="custom-select-option" data-sort="title_asc">
+                    <span class="material-symbols-outlined" style="font-size:18px;">sort_by_alpha</span>
+                    <div class="option-label">Nama (A-Z)</div>
+                  </div>
+                  <div class="custom-select-option" data-sort="title_desc">
+                    <span class="material-symbols-outlined" style="font-size:18px; transform: scaleY(-1);">sort_by_alpha</span>
+                    <div class="option-label">Nama (Z-A)</div>
+                  </div>
+                  <div class="custom-select-option" data-sort="date_asc">
+                    <span class="material-symbols-outlined" style="font-size:18px;">event</span>
+                    <div class="option-label">Tenggat Terdekat</div>
+                  </div>
+                  <div class="custom-select-option" data-sort="status_asc">
+                    <span class="material-symbols-outlined" style="font-size:18px;">pending_actions</span>
+                    <div class="option-label">Status (Belum Mulai)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="taskListContainer" class="list-view-container">
+        <!-- List rows rendered here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- CALENDAR TAB -->
+  <section id="tab-calendar" class="tab-panel">
+    <div style="padding: 16px 32px; width: 100%; height: 100%; display: flex; flex-direction: column;">
+      <div class="page-header" style="margin-bottom: 16px;">
+        <div>
+          <h2 class="page-title" data-i18n="calendar.title">Kalender PKL</h2>
+          <p class="hint" style="margin: 0;" data-i18n="calendar.subtitle">Tinjauan seluruh jadwal kegiatan dan tugasmu.</p>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button class="btn btn-ghost" id="btnCalPrev"><span class="material-symbols-outlined">chevron_left</span></button>
+          <div id="calMonthYear" style="font-weight: 600; font-size: 16px;"></div>
+          <button class="btn btn-ghost" id="btnCalNext"><span class="material-symbols-outlined">chevron_right</span></button>
+          <button class="btn btn-outline" id="btnCalToday" data-i18n="calendar.today">Hari Ini</button>
+        </div>
+      </div>
+      
+      <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: 500; font-size: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); color: var(--fg-secondary);">
+          <div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div><div>Min</div>
+        </div>
+        <div id="calendarGrid" style="flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(100px, 1fr); gap: 1px; background: var(--border);">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS TAB -->
+  <section id="tab-settings" class="tab-panel">
+    <div style="padding: 16px 32px; width: 100%;">
+      <div class="page-header">
+        <h2 class="page-title" data-i18n="settings.title">Pengaturan Aplikasi</h2>
+      </div>
+
+      <div style="padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="flex: 1;">
+            <h3 style="margin-top: 0; margin-bottom: 8px; font-weight: 500;" data-i18n="settings.language.title">Bahasa</h3>
+            <p class="hint" style="margin: 0 0 16px;" data-i18n="settings.language.hint">Pilih bahasa antarmuka aplikasi.</p>
+            <div style="display: flex; gap: 12px; margin-bottom: 0;">
+              <button type="button" class="btn btn-outline" id="btnLangId" onclick="setLanguage('id')" style="flex: 1; justify-content: center;">
+                🇮🇩 Indonesia
+              </button>
+              <button type="button" class="btn btn-outline" id="btnLangEn" onclick="setLanguage('en')" style="flex: 1; justify-content: center;">
+                🇬🇧 English
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="flex: 1;">
+            <h3 style="margin-top: 0; margin-bottom: 8px; font-weight: 500;" data-i18n="settings.theme.title">Tampilan (Tema)</h3>
+            <p class="hint" style="margin: 0 0 16px;" data-i18n="settings.theme.hint">Pilih mode terang atau gelap, atau gunakan preferensi sistem sebagai default.</p>
+            <div style="display: flex; gap: 12px; margin-bottom: 0;">
+              <button type="button" class="btn btn-outline" id="btnThemeDark" style="flex: 1; justify-content: center;">
+                <span class="material-symbols-outlined">dark_mode</span> <span data-i18n="settings.theme.dark">Gelap</span>
+              </button>
+              <button type="button" class="btn btn-outline" id="btnThemeLight" style="flex: 1; justify-content: center;">
+                <span class="material-symbols-outlined">light_mode</span> <span data-i18n="settings.theme.light">Terang</span>
+              </button>
+              <button type="button" class="btn btn-outline" id="btnThemeSystem" style="flex: 1; justify-content: center;">
+                <span class="material-symbols-outlined">desktop_windows</span> <span data-i18n="settings.theme.system">Sistem Default</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+        <form id="formSettingsGemini">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1;">
+              <h3 style="margin-top: 0; margin-bottom: 8px; font-weight: 500;" data-i18n="settings.api.title">API Key Gemini</h3>
+              <p class="hint" style="margin: 0 0 16px;" data-i18n="settings.api.hint">Kunci akses untuk mengaktifkan fitur asisten AI (merapikan kalimat dan koreksi ejaan). Opsional.</p>
+              <div class="api-key-row" style="margin-bottom: 0;">
+                <input type="password" id="geminiApiKey" placeholder="AIzaSy..." style="flex: 1;">
+                <button type="button" class="btn btn-outline btn-sm" id="btnToggleApiKey">
+                  <span class="material-symbols-outlined" id="apiKeyIcon">visibility</span>
+                  <span id="apiKeyBtnText" data-i18n="settings.api.show">Lihat</span>
+                </button>
+                <button type="submit" class="btn btn-primary btn-sm" data-i18n="settings.api.save">Simpan</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+    </div>
+  </section>
+
+
+  </main>
+  
+  <!-- SIDE PANEL (KALENDER/DLL) -->
+  <aside id="sidePanel" class="side-panel">
+    <div class="side-panel-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" id="sidePanelIcon" style="color: #EA4335; font-size: 20px;">calendar_month</span>
+        <h3 id="sidePanelTitle" style="margin: 0; font-size: 14px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;" data-i18n="sidebar.calendar">Kalender</h3>
+      </div>
+      <button class="btn-icon" style="width: 32px; height: 32px;" id="btnCloseSidePanel" title="Tutup">
+        <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
+      </button>
+    </div>
+    <div class="side-panel-content">
+      <!-- CALENDAR VIEW -->
+      <div id="sideViewCalendar" class="side-panel-view active-view">
+      <div class="mini-calendar-nav" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div id="mcMonthYear" style="font-weight: 500; font-size: 14px;">Agustus 2026</div>
+        <div style="display: flex; gap: 4px;">
+          <button class="btn-icon" style="width: 28px; height: 28px;" id="mcPrev"><span class="material-symbols-outlined" style="font-size: 20px;">chevron_left</span></button>
+          <button class="btn-icon" style="width: 28px; height: 28px;" id="mcNext"><span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span></button>
+        </div>
+      </div>
+      <div class="mini-calendar-grid">
+        <div class="mc-weekdays" style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; color: var(--fg-muted); margin-bottom: 8px;">
+          <span>M</span><span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span>
+        </div>
+        <div class="mc-days" id="mcDays" style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; gap: 4px;"></div>
+      </div>
+      <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
+      <div style="font-size: 13px; color: var(--fg-secondary);">
+        <p style="margin-top: 0; margin-bottom: 8px;" data-i18n="sidebar.agenda">Agenda Harian:</p>
+        <div id="mcAgenda" style="background: var(--bg-elevated); padding: 12px; border-radius: 8px; font-size: 12px;" data-i18n="sidebar.empty">
+          Pilih tanggal untuk melihat catatan kegiatan.
+        </div>
+      </div>
+      </div>
+      
+      <!-- KEEP VIEW -->
+      <div id="sideViewKeep" class="side-panel-view" style="display: none; height: 100%;">
+        <textarea id="quickNotesArea" placeholder="Tulis catatan cepat di sini... (otomatis tersimpan)" style="width: 100%; height: 100%; resize: none; border: none; background: transparent; color: var(--fg-primary); outline: none; font-size: 14px; font-family: inherit; line-height: 1.5;"></textarea>
+      </div>
+      
+      <!-- TASKS VIEW -->
+      <div id="sideViewTasks" class="side-panel-view" style="display: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <h4 style="margin: 0; font-size: 14px; color: var(--fg-secondary);" data-i18n="sidebar.todayTasks">Tugas Hari Ini</h4>
+          <button class="btn-icon btn-sm" id="btnRefreshDailyTasks" title="Segarkan"><span class="material-symbols-outlined" style="font-size: 16px;">refresh</span></button>
+        </div>
+        <div id="dailyTasksList" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      
+      <!-- CONTACTS VIEW -->
+      <div id="sideViewContacts" class="side-panel-view" style="display: none;">
+        <button class="btn btn-outline" id="btnAddContact" style="width: 100%; margin-bottom: 16px; justify-content: center;">
+          <span class="material-symbols-outlined" style="font-size: 18px;">person_add</span> Tambah Kontak
+        </button>
+        <div id="contactsList" style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </aside>
+  
+  <!-- SIDEBAR KANAN -->
+  <aside class="app-right-sidebar" style="position: relative;">
+    <div class="right-nav-active-indicator"></div>
+    <button class="right-sidebar-icon" id="btnCalendarSide" title="Kalender">
+      <span class="material-symbols-outlined" style="color: #EA4335;">calendar_month</span>
+    </button>
+    <button class="right-sidebar-icon" id="btnKeepSide" title="Catatan Cepat">
+      <span class="material-symbols-outlined" style="color: #F4B400;">lightbulb</span>
+    </button>
+    <button class="right-sidebar-icon" id="btnTasksSide" title="Tugas Hari Ini">
+      <span class="material-symbols-outlined" style="color: #0F9D58;">task_alt</span>
+    </button>
+    <button class="right-sidebar-icon" id="btnContactsSide" title="Kontak Penting">
+      <span class="material-symbols-outlined" style="color: #1a73e8;">person</span>
+    </button>
+    <hr style="width: 24px; border: none; border-top: 1px solid var(--border); margin: 8px 0;">
+    <div class="fab-wrapper" style="position: relative; width: 40px; height: 40px; z-index: 100;">
+      <button class="right-sidebar-icon" id="btnFabAdd" title="Tambah Baru" style="position: relative; z-index: 2; margin: 0;">
+        <span class="material-symbols-outlined">add</span>
+      </button>
+      <div id="fabMenu" class="custom-select-dropdown" style="bottom: 0; right: calc(100% - 1px); padding-right: 16px; left: auto; top: auto; min-width: 260px; border-radius: 20px; border-bottom-right-radius: 0; z-index: 1; box-shadow: none;">
+        <div class="custom-select-options">
+          <div class="custom-select-option" id="menuAddEntry">
+            <span class="material-symbols-outlined" style="font-size:20px; color: #4285F4;">today</span>
+            <div class="option-label">Tambah Catatan Harian</div>
+          </div>
+          <div class="custom-select-option" id="menuAddTask">
+            <span class="material-symbols-outlined" style="font-size:20px; color: #0F9D58;">task_alt</span>
+            <div class="option-label">Tambah Tugas Baru</div>
+          </div>
+          <div class="custom-select-option" id="menuManageSubjects">
+            <span class="material-symbols-outlined" style="font-size:20px; color: var(--fg-secondary);">library_books</span>
+            <div class="option-label">Atur Mata Pelajaran</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <button id="rightSidebarToggle" class="right-sidebar-toggle" title="Sembunyikan panel samping" style="margin-top: auto;">
+      <span class="material-symbols-outlined">chevron_right</span>
+    </button>
+  </aside>
+</div>
+
+<!-- MODAL FORM TAMBAH CATATAN -->
+<div class="modal-overlay" id="modalAddEntry">
+  <div class="modal" style="max-width: 700px; padding: 0; display: flex; flex-direction: column; overflow: hidden; max-height: 90vh;">
+    <div class="modal-header" style="flex-shrink: 0; border-bottom: 1px solid var(--border); padding: 20px 24px;">
+      <h2 id="formTitle" style="margin: 0; font-size: 20px;">Tambah Catatan Harian</h2>
+      <button class="btn-icon" id="btnCloseModalAddEntry" style="margin: -8px -8px -8px 0;"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <form id="entryForm" style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
+      <div class="modal-body" style="padding: 24px; overflow-y: auto; flex: 1;">
+        <input type="hidden" id="entryId" value="">
+        <div class="form-row">
+          <label for="tanggalDisplayText" class="m3-label">
+            <span class="material-symbols-outlined label-icon">calendar_today</span>
+            <span data-i18n="modal.entry.date">Tanggal Kegiatan</span>
+          </label>
+          <div class="m3-datepicker-wrapper" id="datePickerWrapper">
+            <input type="hidden" id="tanggal" name="tanggal" required>
+            <div class="m3-datepicker-trigger" id="datePickerTrigger" tabindex="0">
+              <span class="material-symbols-outlined trigger-icon">event</span>
+              <span id="tanggalDisplayText" class="trigger-text">Pilih Tanggal</span>
+              <span class="material-symbols-outlined trigger-arrow">arrow_drop_down</span>
+            </div>
+            <div class="m3-datepicker-popover" id="datePickerPopover">
+              <div class="datepicker-header">
+                <button type="button" class="datepicker-nav-btn" id="dpPrevMonth" title="Bulan Sebelumnya">
+                  <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <div class="datepicker-month-year" id="dpMonthYear">Agustus 2026</div>
+                <button type="button" class="datepicker-nav-btn" id="dpNextMonth" title="Bulan Berikutnya">
+                  <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+              </div>
+              <div class="datepicker-weekdays">
+                <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
+              </div>
+              <div class="datepicker-days-grid" id="dpDaysGrid"></div>
+              <div class="datepicker-footer">
+                <button type="button" class="btn btn-ghost btn-sm" id="dpTodayBtn">Hari Ini</button>
+                <button type="button" class="btn btn-tonal btn-sm" id="dpCloseBtn">Selesai</button>
+              </div>
+            </div>
+          </div>
+          <div id="holidayInfo" class="holiday-info-box" style="display:none;"></div>
+        </div>
+        <div class="form-row">
+          <label for="kegiatan" class="m3-label">
+            <span class="material-symbols-outlined label-icon">edit_note</span>
+            <span data-i18n="modal.entry.desc">Nama Pekerjaan &amp; Pelaksanaan Kegiatan / Hasil</span>
+          </label>
+          <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <input type="hidden" id="templateJobdeskVal" value="">
+            <div class="custom-select-wrapper" id="customTemplateSelect" style="flex: 1;">
+              <div class="custom-select-trigger">
+                <div class="custom-select-value">
+                  <span class="material-symbols-outlined" style="margin-right: 8px; color: var(--primary); font-size: 18px;">auto_fix</span>
+                  <div class="custom-select-placeholder" id="templateJobdeskPlaceholder">Gunakan Template Cepat...</div>
+                </div>
+                <span class="material-symbols-outlined custom-select-arrow">keyboard_arrow_down</span>
+              </div>
+              <div class="custom-select-dropdown">
+                <div class="custom-select-options">
+                  <div class="custom-select-option" data-value="">
+                    <div class="option-label">Gunakan Template Cepat...</div>
+                  </div>
+                  <div class="custom-select-option" data-value="sarpras">
+                    <div class="option-label">Sarana Prasarana (IT Support / Teknisi)</div>
+                  </div>
+                  <div class="custom-select-option" data-value="front_office">
+                    <div class="option-label">Front Office (Layanan & Buku Tamu)</div>
+                  </div>
+                  <div class="custom-select-option" data-value="perpustakaan">
+                    <div class="option-label">Perpustakaan (Input Buku)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="m3-textarea-wrapper">
+            <textarea id="kegiatan" class="m3-textarea" rows="4" required placeholder="Contoh: Melakukan instalasi ulang sistem operasi pada 5 unit komputer lab, dilanjutkan pengecekan koneksi jaringan..."></textarea>
+            <div class="ai-toolbar">
+              <button type="button" class="btn-gemini-ai" id="btnAiRephrase">
+                <span class="material-symbols-outlined gemini-sparkle">auto_awesome</span>
+                <span>Buatkan Variasi dengan AI</span>
+              </button>
+              <span id="aiStatus" class="ai-status"></span>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label><span data-i18n="modal.entry.photo">Foto Dokumentasi</span> <span class="optional" data-i18n="modal.entry.photoOpt">(opsional, bisa lebih dari satu)</span></label>
+          <div class="gdrive-dropzone" id="dropzone">
+            <input type="file" id="photos" accept="image/png,image/jpeg,image/webp" multiple class="gdrive-file-input">
+            <div class="gdrive-dropzone-content">
+              <div class="gdrive-icon-wrapper">
+                <span class="material-symbols-outlined gdrive-icon">cloud_upload</span>
+              </div>
+              <div class="gdrive-text">
+                <p class="gdrive-main-text"><span data-i18n="modal.entry.dropzone1">Tarik &amp; lepas foto di sini, atau </span><span class="gdrive-browse-link" data-i18n="modal.entry.dropzone2">Jelajahi File</span></p>
+                <p class="gdrive-sub-text" data-i18n="modal.entry.dropzone3">Mendukung format JPG, PNG, WebP (bisa pilih banyak foto)</p>
+              </div>
+            </div>
+          </div>
+          <div id="existingPhotos" class="photo-chip-list"></div>
+          <div id="photoPreview" class="photo-preview-list"></div>
+        </div>
+      </div>
+      <div class="form-actions" style="padding: 16px 24px; border-top: 1px solid var(--border); flex-shrink: 0; background: var(--bg-surface); margin: 0;">
+        <button type="submit" class="btn btn-primary" id="btnSubmit">
+          <span class="material-symbols-outlined">save</span>
+          <span data-i18n="modal.entry.save">Simpan Catatan</span>
+        </button>
+        <button type="button" class="btn btn-ghost" id="btnCancelEdit" style="display:none;">
+          <span class="material-symbols-outlined">cancel</span>
+          Batal Edit
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL PREVIEW DOKUMEN -->
+<div id="previewModal" class="modal-overlay">
+  <div class="modal preview-modal-content">
+    <div class="preview-modal-header">
+      <div>
+        <h3 id="previewTitle" class="preview-modal-title">Pratinjau Dokumen</h3>
+        <p id="previewSubtitle" class="preview-modal-sub">Tampilan dokumen sebelum diunduh</p>
+      </div>
+      <div class="preview-header-actions">
+        <button type="button" class="btn btn-outline btn-sm" id="btnDownloadDocx">
+          <span class="material-symbols-outlined">description</span>
+          Word (.docx)
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnDownloadPdf">
+          <span class="material-symbols-outlined">picture_as_pdf</span>
+          PDF
+        </button>
+        <button type="button" class="btn-close" id="btnClosePreview" title="Tutup">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    </div>
+    <div class="preview-modal-body">
+      <div id="previewPaper" class="document-paper">
+        <!-- Content dynamically generated by JS -->
+      </div>
+    </div>
+      </div>
+    </div>
+
+
+<!-- MODAL ADD TASK -->
+<div id="modalAddTask" class="modal-overlay">
+  <div class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title" data-i18n="modal.task.titleAdd">Tambah Tugas</h2>
+        <p class="modal-sub" data-i18n="modal.task.sub">Tugas tidak akan masuk ke Laporan PKL</p>
+      </div>
+      <button type="button" class="btn-close" id="btnCloseModalAddTask" title="Tutup">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="formAddTask">
+        <input type="hidden" id="taskId">
+        <div class="form-row">
+          <label for="taskTitle" data-i18n="modal.task.name">Judul Tugas</label>
+          <input type="text" id="taskTitle" required placeholder="Contoh: Revisi Bab 1 Laporan PKL">
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-row" id="taskSubjectGroup" style="display: block; margin-bottom: 0;">
+            <label data-i18n="modal.task.subject">Mata Pelajaran (Opsional)</label>
+            <input type="hidden" id="taskSubject" value="">
+            <div class="custom-select-wrapper" id="customSubjectSelect">
+              <div class="custom-select-trigger">
+                <div class="custom-select-value">
+                  <div class="custom-select-placeholder">-- Pilih Mapel --</div>
+                </div>
+                <span class="material-symbols-outlined custom-select-arrow">arrow_drop_down</span>
+              </div>
+              <div class="custom-select-dropdown">
+                <div class="custom-select-search-box">
+                  <span class="material-symbols-outlined search-icon">search</span>
+                  <input type="text" id="customSubjectSearch" placeholder="Cari mapel..." autocomplete="off">
+                </div>
+                <div class="custom-select-options" id="customSubjectOptions">
+                  <!-- Options rendered dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row" style="margin-bottom: 0;">
+            <label for="taskDeadline" data-i18n="modal.task.deadline">Tenggat Waktu (Opsional)</label>
+            <input type="date" id="taskDeadline">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="taskDescription" data-i18n="modal.task.desc">Deskripsi / Catatan (Opsional)</label>
+          <textarea id="taskDescription" rows="2" placeholder="Contoh: Tonton dari menit 10:00 - 15:00"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-row" style="margin-bottom: 0;">
+            <label for="taskReferenceUrl" data-i18n="modal.task.url">Tautan URL (Opsional)</label>
+            <input type="url" id="taskReferenceUrl" placeholder="https://youtube.com/...">
+          </div>
+          <div class="form-row" style="margin-bottom: 0;">
+            <label for="taskAttachment" data-i18n="modal.task.attach">Lampiran (Opsional)</label>
+            <input type="file" id="taskAttachment" accept="*/*" style="padding: 8px; font-size: 13px;">
+          </div>
+        </div>
+        <div class="form-actions" style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="submit" class="btn btn-primary" id="btnSubmitTask">
+            <span class="material-symbols-outlined">save</span>
+            <span data-i18n="modal.task.save">Simpan Tugas</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MANAGE SUBJECTS -->
+<div id="modalManageSubjects" class="modal-overlay">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title" data-i18n="modal.subject.title">Atur Mata Pelajaran</h2>
+      </div>
+      <button type="button" class="btn-close" id="btnCloseModalManageSubjects" title="Tutup">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="formAddSubject" style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <input type="text" id="subjectName" required placeholder="Nama Mapel Baru" style="flex: 1;">
+        <button type="submit" class="btn btn-primary btn-sm" data-i18n="common.add">Tambah</button>
+      </form>
+      <div id="subjectList" class="subject-list">
+        <!-- Subjects rendered here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div id="customConfirmModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 400px; text-align: center;">
+      <h3 style="margin-top: 0; color: var(--fg-heading);">Konfirmasi</h3>
+      <p id="customConfirmText" style="color: var(--fg-secondary); margin-bottom: 24px; line-height: 1.5;"></p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button type="button" class="btn-outline-primary" id="btnCustomConfirmCancel">Batal</button>
+        <button type="button" class="btn-primary" id="btnCustomConfirmOk" style="background: var(--danger); border-color: var(--danger); color: white;">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+<div id="toast" class="toast">
+  <span id="toastMsg"></span>
+  <button id="toastAction" class="toast-action" style="display: none;"></button>
+</div>
+
+<script src="/js/state.js"></script>
+<script src="/js/theme.js"></script>
+<script src="/js/tabs.js"></script>
+<script src="/js/profile.js"></script>
+<script src="/js/holiday.js"></script>
+<script src="/js/calendar.js"></script>
+<script src="/js/entryForm.js"></script>
+<script src="/js/renderEntries.js"></script>
+<script src="/js/preview.js"></script>
+<script src="/js/init.js"></script>
+<script src="/js/miniCalendar.js"></script>
+<script src="/js/fab.js"></script>
+<script src="/js/dropdown.js"></script>
+<script src="/js/tasks.js"></script>
+<script src="/js/subjects.js"></script>
+<script src="/js/mobile.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>
+
+
