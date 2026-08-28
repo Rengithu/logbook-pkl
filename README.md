@@ -31,6 +31,9 @@ Aplikasi ini telah dimodernisasi menggunakan **React (Vite) + TypeScript** di si
 - **Generator Dokumen:** `docx`, `pdfkit`.
 - **Pemroses Gambar:** `sharp`.
 
+## Known Issues
+- `image-size` (dependency untuk proses gambar) punya 2 celah keamanan DoS (level High) terkait parsing file ICNS/JXL/HEIF. Fix resmi (`image-size` v2+) memerlukan migrasi backend ke ESM. Karena aplikasi ini dijalankan secara lokal oleh masing-masing pengguna (bukan server publik yang menerima upload dari pihak tak dikenal), risiko eksploitasinya rendah. Rekomendasi: hindari upload file berformat ICNS/HEIF/JXL yang tidak familiar sampai isu ini diperbaiki.
+
 ## 🚀 Panduan Menjalankan Aplikasi (Lokal)
 
 Pastikan Anda telah menginstal [Node.js](https://nodejs.org) (minimal versi 18).
