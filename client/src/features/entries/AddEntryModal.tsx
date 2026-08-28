@@ -25,6 +25,7 @@ export function AddEntryModal() {
   const [photos, setPhotos] = useState<File[]>([])
   const [removedPhotos, setRemovedPhotos] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const isSubmittingRef = useRef(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiStatus, setAiStatus] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -82,6 +83,8 @@ export function AddEntryModal() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (isSubmittingRef.current) return
+    isSubmittingRef.current = true
     setSaving(true)
     try {
       if (editingId) {
@@ -98,6 +101,7 @@ export function AddEntryModal() {
     } catch (e: any) {
       showToast(e.message, true)
     } finally {
+      isSubmittingRef.current = false
       setSaving(false)
     }
   }

@@ -103,6 +103,13 @@ router.post('/', upload.array('photos', 10), async (req, res) => {
   if (!tanggal || !kegiatan) {
     return res.status(400).json({ error: 'Tanggal dan kegiatan wajib diisi' });
   }
+
+  // Guard: reject duplicate entry for the same date
+  const existing = db.prepare('SELECT id FROM entries WHERE tanggal = ? AND isDeleted = 0').get(tanggal);
+  if (existing) {
+    return res.status(409).json({ error: 'Catatan untuk tanggal ini sudah ada. Silakan edit catatan yang sudah ada.' });
+  }
+
   const photos = await processPhotos(req.files || []);
   const entry = {
     id: uuidv4(),
