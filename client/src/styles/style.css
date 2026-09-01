@@ -2551,19 +2551,9 @@ body[data-theme="dark"] .bulk-action-pill.active .pill-divider {
 }
 
 .week-group-body {
-  display: none;
   padding: 0;
   flex-direction: column;
   background: transparent;
-  animation: popoverFadeIn 0.2s ease;
-}
-
-.week-group-body::-webkit-scrollbar {
-  display: none;
-  /* Chrome/Safari */
-}
-
-.week-group-item.expanded .week-group-body {
   display: flex;
 }
 
@@ -2693,13 +2683,8 @@ body[data-theme="dark"] .bulk-action-pill.active .pill-divider {
 }
 
 .entry-expand-body {
-  display: none;
   padding: 4px 16px 16px;
   background: transparent;
-  animation: popoverFadeIn 0.2s ease;
-}
-
-.entry-item.expanded .entry-expand-body {
   display: block;
 }
 

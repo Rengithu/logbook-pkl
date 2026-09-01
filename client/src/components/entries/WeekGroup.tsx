@@ -69,19 +69,29 @@ export function WeekGroup({ wKey, entries, isTrash, entriesViewMode, selectedEnt
           </button>
         </div>
       )}
-      <div className={`week-group-body ${entriesViewMode === 'grid' ? 'entries-grid-mode' : ''}`}>
-        {entries.map(entry => (
-          <EntryItem
-            key={entry.id}
-            entry={entry}
-            isTrash={isTrash}
-            isSelected={selectedEntries.includes(entry.id)}
-            onToggleSelect={() => onToggleSelect(entry.id)}
-            onEdit={() => onEdit(entry)}
-            onDelete={(force) => onDelete(entry.id, force)}
-            onRestore={() => onRestore(entry.id)}
-          />
-        ))}
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateRows: expanded ? '1fr' : '0fr', 
+          transition: 'grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1)' 
+        }}
+      >
+        <div style={{ overflow: 'hidden' }}>
+          <div className={`week-group-body ${entriesViewMode === 'grid' ? 'entries-grid-mode' : ''}`}>
+            {entries.map(entry => (
+              <EntryItem
+                key={entry.id}
+                entry={entry}
+                isTrash={isTrash}
+                isSelected={selectedEntries.includes(entry.id)}
+                onToggleSelect={() => onToggleSelect(entry.id)}
+                onEdit={() => onEdit(entry)}
+                onDelete={(force) => onDelete(entry.id, force)}
+                onRestore={() => onRestore(entry.id)}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )

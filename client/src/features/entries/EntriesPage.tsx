@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useAppStore } from '../../store/appStore'
 import { getWeekKey } from '../../utils/format'
 import * as api from '../../api/client'
@@ -96,6 +96,11 @@ export function EntriesPage() {
   const isTrash = currentView === 'trash'
   
   const currentEntries = isTrash ? trashedEntries : entries
+  const clearSelectedEntries = useAppStore((s) => s.clearSelectedEntries)
+
+  useEffect(() => {
+    clearSelectedEntries()
+  }, [currentView, clearSelectedEntries])
 
   const searchQuery = useAppStore((s) => s.searchQuery)
   const entriesViewMode = useAppStore((s) => s.entriesViewMode)
