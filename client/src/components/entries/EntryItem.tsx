@@ -57,59 +57,69 @@ export function EntryItem({ entry, isTrash, isSelected, onToggleSelect, onEdit, 
           </button>
         </div>
       </div>
-      <div className="entry-expand-body">
-        <div className="entry-job">{entry.kegiatan}</div>
-        {entry.photos && entry.photos.length > 0 && (
-          <div className="entry-photos-preview">
-            {entry.photos.map((p: string) => (
-              <img key={p} src={`/uploads/${p}`} alt="Foto" title="Dokumentasi" loading="lazy" />
-            ))}
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateRows: expanded ? '1fr' : '0fr', 
+          transition: 'grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1)' 
+        }}
+      >
+        <div style={{ overflow: 'hidden' }}>
+          <div className="entry-expand-body">
+            <div className="entry-job">{entry.kegiatan}</div>
+            {entry.photos && entry.photos.length > 0 && (
+              <div className="entry-photos-preview">
+                {entry.photos.map((p: string) => (
+                  <img key={p} src={`/uploads/${p}`} alt="Foto" title="Dokumentasi" loading="lazy" />
+                ))}
+              </div>
+            )}
+            <div className="entry-actions-row">
+              {isTrash ? (
+                <div className="icon-actions-group" style={{ marginLeft: 'auto' }}>
+                  <button className="btn-icon" onClick={onRestore} title="Pulihkan Catatan">
+                    <span className="material-symbols-outlined">restore_from_trash</span>
+                  </button>
+                  <div className="icon-divider" />
+                  <button className="btn-icon btn-icon-danger" onClick={() => onDelete(true)} title="Hapus Permanen">
+                    <span className="material-symbols-outlined">delete_forever</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="icon-actions-group" style={{ marginLeft: 'auto' }}>
+                  <button className="btn-icon" onClick={() => window.open(`/api/export/day/${entry.id}/pdf`, '_blank')} title="Pratinjau Dokumen">
+                    <span className="material-symbols-outlined">visibility</span>
+                  </button>
+                  <div className="icon-divider" />
+                  <button className="btn-icon" onClick={async () => {
+                    try {
+                      const res = await fetch(`/api/export/day/${entry.id}/pdf`)
+                      if (!res.ok) throw new Error('Gagal mengunduh')
+                      const blob = await res.blob()
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `Catatan_Harian_${entry.tanggal}_${entry.hari || 'Hari'}.pdf`
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    } catch (e: any) {
+                      alert(e.message)
+                    }
+                  }} title="Unduh Catatan">
+                    <span className="material-symbols-outlined">download</span>
+                  </button>
+                  <div className="icon-divider" />
+                  <button className="btn-icon" onClick={onEdit} title="Edit Catatan">
+                    <span className="material-symbols-outlined">edit</span>
+                  </button>
+                  <div className="icon-divider" />
+                  <button className="btn-icon btn-icon-danger" onClick={() => onDelete()} title="Hapus Catatan">
+                    <span className="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-        <div className="entry-actions-row">
-          {isTrash ? (
-            <div className="icon-actions-group" style={{ marginLeft: 'auto' }}>
-              <button className="btn-icon" onClick={onRestore} title="Pulihkan Catatan">
-                <span className="material-symbols-outlined">restore_from_trash</span>
-              </button>
-              <div className="icon-divider" />
-              <button className="btn-icon btn-icon-danger" onClick={() => onDelete(true)} title="Hapus Permanen">
-                <span className="material-symbols-outlined">delete_forever</span>
-              </button>
-            </div>
-          ) : (
-            <div className="icon-actions-group" style={{ marginLeft: 'auto' }}>
-              <button className="btn-icon" onClick={() => window.open(`/api/export/day/${entry.id}/pdf`, '_blank')} title="Pratinjau Dokumen">
-                <span className="material-symbols-outlined">visibility</span>
-              </button>
-              <div className="icon-divider" />
-              <button className="btn-icon" onClick={async () => {
-                try {
-                  const res = await fetch(`/api/export/day/${entry.id}/pdf`)
-                  if (!res.ok) throw new Error('Gagal mengunduh')
-                  const blob = await res.blob()
-                  const url = URL.createObjectURL(blob)
-                  const a = document.createElement('a')
-                  a.href = url
-                  a.download = `Catatan_Harian_${entry.tanggal}_${entry.hari || 'Hari'}.pdf`
-                  a.click()
-                  URL.revokeObjectURL(url)
-                } catch (e: any) {
-                  alert(e.message)
-                }
-              }} title="Unduh Catatan">
-                <span className="material-symbols-outlined">download</span>
-              </button>
-              <div className="icon-divider" />
-              <button className="btn-icon" onClick={onEdit} title="Edit Catatan">
-                <span className="material-symbols-outlined">edit</span>
-              </button>
-              <div className="icon-divider" />
-              <button className="btn-icon btn-icon-danger" onClick={() => onDelete()} title="Hapus Catatan">
-                <span className="material-symbols-outlined">delete</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
