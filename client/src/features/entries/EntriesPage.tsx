@@ -147,6 +147,16 @@ export function EntriesPage() {
     return { weekMap: map, sortedWeekKeys: keys }
   }, [filteredEntries])
 
+  // Hitung minggu paling awal dari seluruh entri (bukan yang difilter) untuk menentukan "Minggu ke-1"
+  const oldestWeekKey = useMemo(() => {
+    if (!entries || entries.length === 0) return null
+    let minDate = entries[0].tanggal
+    for (let i = 1; i < entries.length; i++) {
+      if (entries[i].tanggal < minDate) minDate = entries[i].tanggal
+    }
+    return getWeekKey(minDate)
+  }, [entries])
+
   // 3. Memoize filter Tempat Sampah (Trashed Items)
   const filteredTrashedTasks = useMemo(() => {
     if (!trashedTasks) return []
@@ -235,10 +245,20 @@ export function EntriesPage() {
 
           {sortedWeekKeys.map(wKey => {
             const entriesInWeek = weekMap[wKey] // Telah di-sort dari useMemo
+            
+            let weekNumber = 1
+            if (oldestWeekKey) {
+              const d1 = new Date(wKey)
+              const d2 = new Date(oldestWeekKey)
+              const diffDays = Math.round((d1.getTime() - d2.getTime()) / (1000 * 60 * 60 * 24))
+              weekNumber = Math.round(diffDays / 7) + 1
+            }
+
             return (
               <WeekGroup
                 key={wKey}
                 wKey={wKey}
+                weekNumber={weekNumber}
                 entries={entriesInWeek}
                 isTrash={isTrash}
                 entriesViewMode={entriesViewMode}

@@ -3,8 +3,9 @@ import { weekRangeLabelClient } from '../../utils/format'
 import { EntryItem } from './EntryItem'
 import type { Entry } from '../../types/index'
 
-export function WeekGroup({ wKey, entries, isTrash, entriesViewMode, selectedEntries, onToggleSelect, onSelectAllWeek, onEdit, onDelete, onRestore }: {
+export function WeekGroup({ wKey, weekNumber, entries, isTrash, entriesViewMode, selectedEntries, onToggleSelect, onSelectAllWeek, onEdit, onDelete, onRestore }: {
   wKey: string
+  weekNumber?: number
   entries: Entry[]
   isTrash: boolean
   entriesViewMode: string
@@ -27,7 +28,7 @@ export function WeekGroup({ wKey, entries, isTrash, entriesViewMode, selectedEnt
         <div className="week-group-info">
           <div className="week-title-row">
             <span className="material-symbols-outlined week-icon">date_range</span>
-            <span className="week-title-text">Minggu {weekRangeLabelClient(wKey, entries)}</span>
+            <span className="week-title-text">Minggu ke-{weekNumber || 1} ({weekRangeLabelClient(wKey, entries)})</span>
           </div>
           <div className="week-subtitle">
             <span className="material-symbols-outlined" style={{ fontSize: 14, marginRight: 4, verticalAlign: 'middle' }}>event_note</span>
