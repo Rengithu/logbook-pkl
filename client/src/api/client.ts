@@ -231,3 +231,46 @@ export async function convertImageToPdf(files: File[]) {
 
     return res.blob()
 }
+
+// ---------- QUICK NOTES ----------
+export async function getQuickNotes(tanggal: string) {
+    const res = await apiFetch(`/quick-notes?tanggal=${encodeURIComponent(tanggal)}`)
+    if (!res.ok) throw new Error((await res.json()).error || 'Gagal memuat catatan cepat')
+    return res.json()
+}
+
+export async function createQuickNote(data: { tanggal: string; teks: string }) {
+    const res = await apiFetch('/quick-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Gagal menyimpan catatan cepat')
+    return res.json()
+}
+
+export async function deleteQuickNote(id: string) {
+    const res = await apiFetch(`/quick-notes/${id}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error((await res.json()).error || 'Gagal menghapus catatan cepat')
+    return res.json()
+}
+
+export async function markQuickNotesUsed(ids: string[]) {
+    const res = await apiFetch('/quick-notes/mark-used', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Gagal menandai catatan')
+    return res.json()
+}
+
+export async function aiGenerateFromNotes(notes: string[]) {
+    const res = await apiFetch('/ai/generate-from-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes }),
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Gagal generate dari catatan cepat')
+    return res.json()
+}

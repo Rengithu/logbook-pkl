@@ -34,3 +34,11 @@ export interface Task {
   attachmentName: string | null
   referenceUrl: string | null
 }
+
+export interface QuickNote {
+  id: string
+  tanggal: string
+  teks: string
+  createdAt: string
+  isUsed: number
+}

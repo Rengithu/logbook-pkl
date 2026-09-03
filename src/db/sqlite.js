@@ -55,6 +55,14 @@ db.exec(`
     id TEXT PRIMARY KEY,
     name TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS quick_notes (
+    id TEXT PRIMARY KEY,
+    tanggal TEXT,
+    teks TEXT,
+    createdAt TEXT,
+    isUsed INTEGER DEFAULT 0
+  );
 `);
 
 // Migrate columns for AI settings if they don't exist

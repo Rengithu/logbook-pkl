@@ -98,4 +98,30 @@ Jika ditanya hal di luar konteks PKL, tetap jawab dengan sopan.`;
   }
 });
 
+// ─── Generate from quick notes (used by "Generate dari Catatan Cepat" button) ───
+router.post('/generate-from-notes', async (req, res) => {
+  const { notes } = req.body;
+  if (!Array.isArray(notes) || notes.length === 0) {
+    return res.status(400).json({ error: 'notes harus berupa array yang tidak kosong' });
+  }
+
+  const systemPrompt = `Gabungkan poin-poin catatan berikut menjadi SATU PARAGRAF singkat yang menceritakan kegiatan hari itu.
+JANGAN gunakan bullet point atau penomoran.
+JANGAN menyebutkan waktu/jam spesifik, cukup fokus pada kegiatan yang dilakukan.
+JANGAN menggunakan kalimat pembuka seperti "Hari ini", "Pada hari ini", atau semacamnya — langsung mulai dengan kata kerja yang menjelaskan kegiatan.
+Gunakan bahasa yang natural dan tidak bertele-tele, seperti gaya bahasa sehari-hari yang sopan.`;
+
+  const notesList = notes.map((n, i) => `${i + 1}. ${n}`).join('\n');
+  const fullPrompt = `${systemPrompt}\n\nCatatan:\n${notesList}`;
+
+  try {
+    const resultText = await callGemini(fullPrompt);
+    res.json({ text: resultText });
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: 'Gagal memproses permintaan ke Gemini API' });
+  }
+});
+
 module.exports = router;

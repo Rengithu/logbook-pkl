@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Modal } from '../../components/Modal'
 import { CustomDropdown } from '../../components/CustomDropdown'
 import { CustomDatePicker } from '../../components/CustomDatePicker'
 import { useAppStore } from '../../store/appStore'
 import * as apiClient from '../../api/client'
 import { todayStr } from '../../utils/format'
+import type { QuickNote } from '../../types/index'
 
 const TEMPLATES: Record<string, string> = {
   sarpras: 'Melakukan perbaikan dan perawatan perangkat, seperti instalasi ulang sistem operasi pada komputer. Selain itu, membantu keperluan operasional sarana dan prasarana umum, misalnya mengganti lampu ruangan yang mati, serta memberikan bantuan teknis IT Support secara keseluruhan sesuai dengan arahan dari instruktur.',
@@ -30,8 +31,23 @@ export function AddEntryModal() {
   const [aiStatus, setAiStatus] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Quick Notes state
+  const [quickNotes, setQuickNotes] = useState<QuickNote[]>([])
+  const [generatingFromNotes, setGeneratingFromNotes] = useState(false)
+
   const editingEntry = editingId ? entries.find(e => e.id === editingId) : null
   const isEditing = !!editingEntry
+
+  // Fetch quick notes when modal opens or tanggal changes
+  useEffect(() => {
+    if (!isOpen) {
+      setQuickNotes([])
+      return
+    }
+    apiClient.getQuickNotes(tanggal)
+      .then(setQuickNotes)
+      .catch(() => setQuickNotes([]))
+  }, [isOpen, tanggal])
 
   // Sync form when editing
   if (isOpen && editingEntry && kegiatan === '' && tanggal === todayStr()) {
@@ -45,6 +61,7 @@ export function AddEntryModal() {
     setPhotos([])
     setRemovedPhotos([])
     setAiStatus('')
+    setQuickNotes([])
     onClose()
   }
 
@@ -81,6 +98,23 @@ export function AddEntryModal() {
     }
   }
 
+  async function handleGenerateFromNotes() {
+    if (quickNotes.length === 0) return
+    setGeneratingFromNotes(true)
+    setAiStatus('Sedang menggabungkan catatan cepat dengan AI...')
+    try {
+      const result = await apiClient.aiGenerateFromNotes(quickNotes.map(n => n.teks))
+      setKegiatan(result.text)
+      setAiStatus('Selesai — periksa dan edit hasilnya sebelum disimpan.')
+      showToast('Paragraf berhasil digenerate dari catatan cepat')
+    } catch (e: any) {
+      setAiStatus(e.message)
+      showToast(e.message, true)
+    } finally {
+      setGeneratingFromNotes(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (isSubmittingRef.current) return
@@ -93,6 +127,10 @@ export function AddEntryModal() {
       } else {
         await apiClient.createEntry({ tanggal, kegiatan, photos })
         showToast('Catatan berhasil disimpan')
+      }
+      // Mark quick notes as used (if any were loaded)
+      if (quickNotes.length > 0) {
+        apiClient.markQuickNotesUsed(quickNotes.map(n => n.id)).catch(console.error)
       }
       // Reload entries
       const data = await apiClient.getEntries()
@@ -143,6 +181,33 @@ export function AddEntryModal() {
                 ]}
               />
             </div>
+
+            {/* Quick Notes section — tampil jika ada catatan cepat untuk tanggal ini */}
+            {quickNotes.length > 0 && (
+              <div className="quick-notes-section">
+                <div className="quick-notes-section-header">
+                  <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--accent-yellow)' }}>bolt</span>
+                  <span className="quick-notes-section-title">Catatan Cepat Tersedia ({quickNotes.length})</span>
+                </div>
+                <ul className="quick-notes-section-list">
+                  {quickNotes.map(note => (
+                    <li key={note.id} className="quick-notes-section-item">{note.teks}</li>
+                  ))}
+                </ul>
+                <button
+                  id="generate-from-notes-btn"
+                  type="button"
+                  className="btn-gemini-ai"
+                  onClick={handleGenerateFromNotes}
+                  disabled={generatingFromNotes || aiLoading}
+                  style={{ width: '100%' }}
+                >
+                  <span className="material-symbols-outlined gemini-sparkle">auto_awesome</span>
+                  <span>{generatingFromNotes ? 'Sedang generate...' : 'Generate dari Catatan Cepat'}</span>
+                </button>
+              </div>
+            )}
+
             <div className="m3-textarea-wrapper unified">
               <textarea
                 className="m3-textarea"

@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { useAppStore } from '../../store/appStore'
 import { formatTanggalIndo } from '../../utils/format'
+import { QuickNoteWidget } from '../../components/QuickNoteWidget'
 
 export function DashboardPage() {
   const tasks = useAppStore((s) => s.tasks)
@@ -86,6 +87,8 @@ export function DashboardPage() {
           <StatCard icon="error" label="Overdue" value={overdue} color="var(--danger)" className="stat-overdue" />
         </div>
       </div>
+
+      <QuickNoteWidget />
 
       <div style={{ marginTop: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>

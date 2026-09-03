@@ -10,6 +10,7 @@ const tasksRoutes = require('./src/routes/tasks');
 const subjectsRoutes = require('./src/routes/subjects');
 const contactsRoutes = require('./src/routes/contacts');
 const toolsRoutes = require('./src/routes/tools');
+const quickNotesRoutes = require('./src/routes/quickNotes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,7 @@ app.use('/api/tasks', tasksRoutes);
 app.use('/api/subjects', subjectsRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/tools', toolsRoutes);
+app.use('/api/quick-notes', quickNotesRoutes);
 
 // Basic error handler (e.g. multer file-type / size errors)
 app.use((err, req, res, next) => {
