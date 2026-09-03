@@ -2431,24 +2431,48 @@ body[data-theme="dark"] .btn-split[data-action="week-zip"]:hover {
   border-bottom-left-radius: 12px;
 }
 
-/* If only one button */
-.week-footer-btn:only-child {
+/* Condition 1: Collapsed (Rounded bottom only) */
+.week-footer-actions.state-collapsed .week-footer-btn:last-child {
+  border-right: none;
+  border-bottom-right-radius: 12px;
+}
+
+.week-footer-actions.state-collapsed .week-footer-btn:first-child {
+  border-bottom-left-radius: 12px;
+}
+
+.week-footer-actions.state-collapsed .week-footer-btn:only-child {
   border-bottom-left-radius: 12px;
   border-bottom-right-radius: 12px;
 }
 
-/* When the first entry below is selected AND the card is expanded, round top corners to visually separate buttons from header */
-.week-group-item.expanded .week-footer-actions:has(+ .week-group-body > .entry-item.selected:first-child) .week-footer-btn:first-child {
+/* Condition 2 & 4: Expanded Normal (All corners rounded) */
+.week-footer-actions.state-expanded-normal .week-footer-btn:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.week-footer-actions.state-expanded-normal .week-footer-btn:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.week-footer-actions.state-expanded-normal .week-footer-btn:only-child {
+  border-radius: 12px;
+}
+
+/* Condition 3: Expanded + List Mode + First Entry Selected (Top rounded, Bottom sharp) */
+.week-footer-actions.state-expanded-first-selected .week-footer-btn:first-child {
   border-top-left-radius: 12px;
   border-bottom-left-radius: 0;
 }
 
-.week-group-item.expanded .week-footer-actions:has(+ .week-group-body > .entry-item.selected:first-child) .week-footer-btn:last-child {
+.week-footer-actions.state-expanded-first-selected .week-footer-btn:last-child {
   border-top-right-radius: 12px;
   border-bottom-right-radius: 0;
 }
 
-.week-group-item.expanded .week-footer-actions:has(+ .week-group-body > .entry-item.selected:first-child) .week-footer-btn:only-child {
+.week-footer-actions.state-expanded-first-selected .week-footer-btn:only-child {
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   border-bottom-left-radius: 0;

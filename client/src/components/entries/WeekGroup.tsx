@@ -42,8 +42,21 @@ export function WeekGroup({ wKey, weekNumber, entries, isTrash, entriesViewMode,
           <span className="material-symbols-outlined arrow-icon">expand_more</span>
         </button>
       </div>
-      {!isTrash && (
-        <div className="week-footer-actions" onClick={(e) => e.stopPropagation()}>
+      {!isTrash && (() => {
+        const isFirstSelected = entries.length > 0 && selectedEntries.includes(entries[0].id)
+        const isListMode = entriesViewMode === 'list'
+        
+        let actionStateClass = 'state-collapsed'
+        if (expanded) {
+          if (isListMode && isFirstSelected) {
+            actionStateClass = 'state-expanded-first-selected'
+          } else {
+            actionStateClass = 'state-expanded-normal'
+          }
+        }
+
+        return (
+          <div className={`week-footer-actions ${actionStateClass}`} onClick={(e) => e.stopPropagation()}>
           <button
             className={`week-footer-btn ${allSelected ? 'active' : ''}`}
             onClick={() => onSelectAllWeek(weekEntryIds)}
@@ -69,7 +82,8 @@ export function WeekGroup({ wKey, weekNumber, entries, isTrash, entriesViewMode,
             <span className="btn-label-desktop">Unduh</span>
           </button>
         </div>
-      )}
+        )
+      })()}
       <div 
         style={{ 
           display: 'grid', 
