@@ -16,6 +16,17 @@ export function QuickNoteWidget() {
       .catch(() => {/* silently ignore on load */})
   }, [])
 
+  // Refresh otomatis kalau AI Chat baru saja membuat quick note baru (lihat AiChatPanel.tsx)
+  useEffect(() => {
+    function handleQuickNoteCreated() {
+      apiClient.getQuickNotes(todayStr())
+        .then(setNotes)
+        .catch(() => {/* silently ignore */})
+    }
+    window.addEventListener('quicknote:created', handleQuickNoteCreated)
+    return () => window.removeEventListener('quicknote:created', handleQuickNoteCreated)
+  }, [])
+
   async function handleSave() {
     if (!inputText.trim()) return
     setSaving(true)

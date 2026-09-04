@@ -842,6 +842,11 @@ body.right-sidebar-closed .app-right-sidebar hr {
   justify-content: flex-end;
 }
 
+.chat-message.user:hover .chat-edit-btn {
+  opacity: 1 !important;
+}
+
+
 .chat-message.assistant {
   justify-content: flex-start;
 }
