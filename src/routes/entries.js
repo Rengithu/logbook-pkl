@@ -23,7 +23,7 @@ async function processPhotos(files) {
         .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
         .toFile(tmpPath);
-      if (fs.existsSync(p)) fs.promises.unlink(p).catch(console.error);
+      if (fs.existsSync(p)) await fs.promises.unlink(p).catch(console.error);
       return newFilename;
     } catch (err) {
       console.error('Sharp error:', err);
