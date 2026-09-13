@@ -225,7 +225,9 @@ export async function convertImageToPdf(files: File[]) {
         try {
             const data = await res.json()
             if (data.error) errStr = data.error
-        } catch (e) {}
+        } catch {
+            /* response bukan JSON */
+        }
         throw new Error(errStr)
     }
 

@@ -839,13 +839,41 @@ body.right-sidebar-closed .app-right-sidebar hr {
 }
 
 .chat-message.user {
+  position: relative;
   justify-content: flex-end;
 }
-
 .chat-message.user:hover .chat-edit-btn {
   opacity: 1 !important;
 }
 
+.ai-action-card {
+  margin-top: 12px; padding: 8px 12px; border-radius: 8px;
+  display: flex; align-items: flex-start; gap: 8px;
+  background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.chat-msg-toolbar {
+  display: flex; gap: 2px; margin-top: 6px; opacity: 0; transition: opacity 0.15s;
+}
+.chat-message:hover .chat-msg-toolbar { opacity: 1; }
+.chat-msg-toolbar-user { justify-content: flex-end; }
+.chat-msg-action-btn {
+  width: 24px; height: 24px; min-width: 24px;
+  background: transparent; border: none; color: var(--fg-muted);
+}
+.chat-msg-action-btn:hover { color: var(--fg-primary); background: var(--bg-elevated); }
+
+.chat-bubble blockquote {
+  border-left: 3px solid var(--border); margin: 8px 0; padding: 2px 12px;
+  color: var(--fg-secondary); font-style: italic;
+}
+.chat-bubble ul, .chat-bubble ol { padding-left: 20px; margin: 6px 0; }
+.chat-bubble li { margin: 3px 0; }
+.chat-bubble table { border-collapse: collapse; margin: 8px 0; font-size: 13px; width: 100%; }
+.chat-bubble th, .chat-bubble td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+.chat-bubble th { background: var(--bg-elevated); }
+.chat-bubble p { margin: 0 0 8px; }
+.chat-bubble p:last-child { margin-bottom: 0; }
 
 .chat-message.assistant {
   justify-content: flex-start;

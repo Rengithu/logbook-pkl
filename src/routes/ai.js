@@ -79,7 +79,7 @@ router.post('/rephrase', async (req, res) => {
 
 // ─── General chat/generate endpoint (used by AI Chat Panel "Tanya LogBook") ───
 router.post('/generate', async (req, res) => {
-  const { prompt, mentionedTaskIds } = req.body;
+  const { prompt, mentionedTaskIds, history } = req.body;
   if (!prompt || !prompt.trim()) {
     return res.status(400).json({ error: 'Prompt tidak boleh kosong' });
   }
@@ -180,8 +180,30 @@ PENTING SOAL update_task_status: HANYA gunakan tool ini jika user secara eksplis
     mentionContext = mentionedTasks.map(t => `[TASK DIREFERENSIKAN: ${t.id} - ${t.title}]`).join('\n');
   }
 
+  const priorTurns = Array.isArray(history)
+    ? history
+        .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+        .slice(-12)
+        .map((m) => ({
+          role: m.role === 'user' ? 'user' : 'model',
+          parts: [{ text: m.content.slice(0, 8000) }]
+        }))
+        .reduce((acc, turn) => {
+          const last = acc[acc.length - 1]
+          if (last && last.role === turn.role) {
+            last.parts[0].text += `\n\n${turn.parts[0].text}`
+            return acc
+          }
+          acc.push(turn)
+          return acc
+        }, [])
+    : [];
+
   let messages = [
-    { role: 'user', parts: [{ text: `${systemPrompt}\n\n${mentionContext}\n\nPertanyaan pengguna:\n${prompt}` }] }
+    { role: 'user', parts: [{ text: `${systemPrompt}\n\n${mentionContext}` }] },
+    { role: 'model', parts: [{ text: 'Siap. Saya akan membantu sesuai instruksi.' }] },
+    ...priorTurns,
+    { role: 'user', parts: [{ text: prompt }] }
   ];
 
   const delay = (ms) => new Promise(r => setTimeout(r, ms));
