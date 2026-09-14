@@ -20,6 +20,19 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
     return res
 }
 
+// Helper: pastikan response OK sebelum dipakai, ambil pesan error dari body bila ada
+async function assertOk(res: Response, fallbackMsg: string) {
+    if (!res.ok) {
+        let msg = fallbackMsg
+        try {
+            const body = await res.json()
+            msg = body.error || fallbackMsg
+        } catch {}
+        throw new Error(msg)
+    }
+    return res
+}
+
 // ---------- TASKS ----------
 export async function getTasks() {
     const res = await apiFetch('/tasks')
@@ -29,6 +42,7 @@ export async function getTasks() {
 
 export async function getTrashedTasks() {
     const res = await apiFetch('/tasks/trash')
+    await assertOk(res, 'Gagal memuat tugas di tempat sampah')
     return res.json()
 }
 
@@ -68,6 +82,7 @@ export async function updateTask(id: string, data: any) {
 
 export async function deleteTask(id: string, force = false) {
     const res = await apiFetch(`/tasks/${id}${force ? '?force=true' : ''}`, { method: 'DELETE' })
+    await assertOk(res, 'Gagal menghapus tugas')
     return res.json()
 }
 
@@ -78,6 +93,7 @@ export async function deleteTaskForever(id: string) {
 
 export async function restoreTask(id: string) {
     const res = await apiFetch(`/tasks/${id}/restore`, { method: 'POST' })
+    await assertOk(res, 'Gagal memulihkan tugas')
     return res.json()
 }
 
@@ -85,16 +101,19 @@ export async function restoreTask(id: string) {
 export async function getEntries(week?: string) {
     const url = week ? `/entries?week=${week}` : '/entries'
     const res = await apiFetch(url)
+    await assertOk(res, 'Gagal memuat catatan')
     return res.json()
 }
 
 export async function getTrashedEntries() {
     const res = await apiFetch('/entries/trash')
+    await assertOk(res, 'Gagal memuat catatan di tempat sampah')
     return res.json()
 }
 
 export async function getEntryWeeks() {
     const res = await apiFetch('/entries/weeks')
+    await assertOk(res, 'Gagal memuat daftar minggu')
     return res.json()
 }
 
@@ -123,22 +142,26 @@ export async function updateEntry(id: string, data: any) {
 
 export async function deleteEntry(id: string, force = false) {
     const res = await apiFetch(`/entries/${id}${force ? '?force=true' : ''}`, { method: 'DELETE' })
+    await assertOk(res, 'Gagal menghapus catatan')
     return res.json()
 }
 
 export async function restoreEntry(id: string) {
     const res = await apiFetch(`/entries/${id}/restore`, { method: 'PUT' })
+    await assertOk(res, 'Gagal memulihkan catatan')
     return res.json()
 }
 
 // ---------- SUBJECTS ----------
 export async function getSubjects() {
     const res = await apiFetch('/subjects')
+    await assertOk(res, 'Gagal memuat mapel')
     return res.json()
 }
 
 export async function getTrashedSubjects() {
     const res = await apiFetch('/subjects/trash')
+    await assertOk(res, 'Gagal memuat mapel di tempat sampah')
     return res.json()
 }
 
@@ -156,6 +179,7 @@ export async function deleteSubjectForever(id: string) {
 
 export async function restoreSubject(id: string) {
     const res = await apiFetch(`/subjects/${id}/restore`, { method: 'POST' })
+    await assertOk(res, 'Gagal memulihkan mapel')
     return res.json()
 }
 
@@ -169,9 +193,20 @@ export async function createSubject(name: string) {
     return res.json()
 }
 
+export async function updateSubject(id: string, name: string) {
+    const res = await apiFetch(`/subjects/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Gagal memperbarui mapel')
+    return res.json()
+}
+
 // ---------- PROFILE ----------
 export async function getProfile() {
     const res = await apiFetch('/profile')
+    await assertOk(res, 'Gagal memuat profil')
     return res.json()
 }
 
@@ -190,6 +225,7 @@ export async function updateProfile(data: Partial<{
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     })
+    await assertOk(res, 'Gagal menyimpan profil')
     return res.json()
 }
 

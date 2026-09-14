@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Modal } from '../../components/Modal'
 import { CustomDatePicker } from '../../components/CustomDatePicker'
 import { useAppStore } from '../../store/appStore'
@@ -23,6 +23,8 @@ export function AddTaskModal() {
   const [attachment, setAttachment] = useState<File | null>(null)
   const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false)
   const [subjectSearch, setSubjectSearch] = useState('')
+  const [saving, setSaving] = useState(false)
+  const isSubmittingRef = useRef(false)
 
   // Sync form with editingTask
   const isEditing = !!editingTask
@@ -53,6 +55,9 @@ export function AddTaskModal() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (isSubmittingRef.current) return
+    isSubmittingRef.current = true
+    setSaving(true)
     const data: Record<string, string | File> = {
       title,
       category: 'Sekolah',
@@ -76,6 +81,9 @@ export function AddTaskModal() {
       handleClose()
     } catch (err: any) {
       showToast(err.message, true)
+    } finally {
+      isSubmittingRef.current = false
+      setSaving(false)
     }
   }
 
@@ -162,9 +170,9 @@ export function AddTaskModal() {
           <button type="button" className="btn-modal-footer-left" onClick={handleClose}>
             Batal
           </button>
-          <button type="submit" className="btn-modal-footer-right">
+          <button type="submit" className="btn-modal-footer-right" disabled={saving}>
             <span className="material-symbols-outlined">save</span>
-            <span>Simpan Tugas</span>
+            <span>{saving ? 'Menyimpan...' : (isEditing ? 'Perbarui Tugas' : 'Simpan Tugas')}</span>
           </button>
         </div>
       </form>

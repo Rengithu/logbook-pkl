@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useAppStore } from '../../store/appStore'
 import { formatTanggalIndo } from '../../utils/format'
 import * as api from '../../api/client'
@@ -15,6 +16,7 @@ export function TasksPage() {
   const setTaskFilter = useAppStore((s) => s.setTaskFilter)
   const openAddTaskModal = useAppStore((s) => s.openAddTaskModal)
   const showToast = useAppStore((s) => s.showToast)
+  const isTogglingRef = useRef(false)
 
   // Filter
   let filteredTasks = [...tasks]
@@ -43,6 +45,8 @@ export function TasksPage() {
   })
 
   async function handleStatusToggle(task: typeof tasks[0]) {
+    if (isTogglingRef.current) return
+    isTogglingRef.current = true
     let nextStatus = 'todo'
     if (task.status === 'todo') nextStatus = 'in_progress'
     else if (task.status === 'in_progress') nextStatus = 'done'
@@ -50,6 +54,7 @@ export function TasksPage() {
       const updated = await api.updateTask(task.id, { status: nextStatus })
       setTasks(tasks.map(t => t.id === task.id ? updated : t))
     } catch (e: any) { showToast(e.message, true) }
+    finally { isTogglingRef.current = false }
   }
 
   async function handleDelete(id: string) {

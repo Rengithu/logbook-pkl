@@ -60,17 +60,57 @@ router.post('/', (req, res) => {
   }
 });
 
+// PUT update subject (rename)
+router.put('/:id', (req, res) => {
+  try {
+    const subjectId = req.params.id;
+    const { name } = req.body;
+
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return res.status(400).json({ error: 'Nama mapel wajib diisi.' });
+    }
+
+    const trimmedName = name.trim();
+
+    const existing = db.prepare('SELECT id FROM subjects WHERE id = ?').get(subjectId);
+    if (!existing) {
+      return res.status(404).json({ error: 'Mapel tidak ditemukan.' });
+    }
+
+    // Cek duplikat (case-insensitive), kecuali untuk mapel yang sedang diedit sendiri
+    const duplicate = db.prepare('SELECT id FROM subjects WHERE LOWER(name) = LOWER(?) AND id != ?').get(trimmedName, subjectId);
+    if (duplicate) {
+      return res.status(400).json({ error: 'Mapel dengan nama ini sudah ada.' });
+    }
+
+    db.prepare('UPDATE subjects SET name = ? WHERE id = ?').run(trimmedName, subjectId);
+
+    res.json({ id: subjectId, name: trimmedName });
+  } catch (error) {
+    console.error('Error updating subject:', error);
+    res.status(500).json({ error: 'Gagal memperbarui mapel.' });
+  }
+});
+
 // DELETE subject (Hard Delete instead of soft delete since no isDeleted column)
 router.delete('/:id', (req, res) => {
   try {
     const subjectId = req.params.id;
+
+    // Hitung dulu berapa task yang masih mereferensikan mapel ini (task menyimpan nama mapel, bukan id)
+    const affected = db.prepare(`
+      SELECT COUNT(*) AS count FROM tasks
+      WHERE subject = (SELECT name FROM subjects WHERE id = ?)
+    `).get(subjectId);
+    const affectedTasksCount = affected ? affected.count : 0;
+
     const result = db.prepare('DELETE FROM subjects WHERE id = ?').run(subjectId);
     
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Mapel tidak ditemukan.' });
     }
     
-    res.json({ message: 'Mapel dihapus.' });
+    res.json({ message: 'Mapel dihapus.', affectedTasksCount });
   } catch (error) {
     console.error('Error deleting subject:', error);
     res.status(500).json({ error: 'Gagal menghapus mapel.' });
