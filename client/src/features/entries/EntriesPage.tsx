@@ -314,6 +314,7 @@ export function EntriesPage() {
 function TrashedTaskItem({ task }: { task: Task }) {
   const showToast = useAppStore((s) => s.showToast)
   const setTrashedTasks = useAppStore((s) => s.setTrashedTasks)
+  const setTasks = useAppStore((s) => s.setTasks)
 
   async function handleRestore() {
     try {
@@ -321,6 +322,9 @@ function TrashedTaskItem({ task }: { task: Task }) {
       showToast('Tugas dipulihkan')
       const updatedTrash = await api.getTrashedTasks()
       setTrashedTasks(updatedTrash)
+      // Sinkronkan store utama agar task langsung muncul di halaman Manajemen Tugas
+      const freshTasks = await api.getTasks()
+      setTasks(freshTasks)
     } catch (e: any) { showToast(e.message, true) }
   }
   async function handleDeleteForever() {
@@ -355,6 +359,7 @@ function TrashedTaskItem({ task }: { task: Task }) {
 function TrashedSubjectItem({ subject }: { subject: Subject }) {
   const showToast = useAppStore((s) => s.showToast)
   const setTrashedSubjects = useAppStore((s) => s.setTrashedSubjects)
+  const setSubjects = useAppStore((s) => s.setSubjects)
 
   async function handleRestore() {
     try {
@@ -362,6 +367,9 @@ function TrashedSubjectItem({ subject }: { subject: Subject }) {
       showToast('Mata pelajaran dipulihkan')
       const updatedTrash = await api.getTrashedSubjects()
       setTrashedSubjects(updatedTrash)
+      // Sinkronkan store utama agar mapel langsung tersedia lagi (dropdown tugas, dsb.)
+      const freshSubjects = await api.getSubjects()
+      setSubjects(freshSubjects)
     } catch (e: any) { showToast(e.message, true) }
   }
   async function handleDeleteForever() {

@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const dayjs = require('dayjs');
 const sharp = require('sharp');
 const db = require('../db/sqlite');
-const { namaHari, weekKey } = require('../utils/dateHelper');
+const { namaHari, weekKey, isValidDateStr } = require('../utils/dateHelper');
 
 const router = express.Router();
 
@@ -103,9 +103,14 @@ router.get('/:id', (req, res) => {
 
 router.post('/', upload.array('photos', 10), async (req, res) => {
   const { tanggal, kegiatan } = req.body;
-  if (!tanggal || !kegiatan) {
-    return res.status(400).json({ error: 'Tanggal dan kegiatan wajib diisi' });
+
+  if (!tanggal || !isValidDateStr(tanggal)) {
+    return res.status(400).json({ error: 'Format tanggal tidak valid' });
   }
+  if (!kegiatan || !String(kegiatan).trim()) {
+    return res.status(400).json({ error: 'Kegiatan tidak boleh kosong' });
+  }
+  const trimmedKegiatan = String(kegiatan).trim();
 
   // Guard: reject duplicate entry for the same date
   const existing = db.prepare('SELECT id FROM entries WHERE tanggal = ? AND isDeleted = 0').get(tanggal);
@@ -118,7 +123,7 @@ router.post('/', upload.array('photos', 10), async (req, res) => {
     id: uuidv4(),
     tanggal,
     hari: namaHari(tanggal),
-    kegiatan,
+    kegiatan: trimmedKegiatan,
     photos,
     createdAt: dayjs().toISOString()
   };
@@ -138,6 +143,22 @@ router.put('/:id', upload.array('photos', 10), async (req, res) => {
   entry.photos = JSON.parse(entry.photos || '[]');
 
   const { tanggal, kegiatan, removePhotos } = req.body;
+
+  // Validasi opsional — hanya jika field dikirim
+  if (tanggal !== undefined && !isValidDateStr(tanggal)) {
+    return res.status(400).json({ error: 'Format tanggal tidak valid' });
+  }
+  if (kegiatan !== undefined && !String(kegiatan ?? '').trim()) {
+    return res.status(400).json({ error: 'Kegiatan tidak boleh kosong' });
+  }
+
+  // Guard duplikat tanggal (sama seperti POST), kecuali entry yang sedang diedit sendiri
+  const effectiveTanggal = tanggal || entry.tanggal;
+  const duplicate = db.prepare('SELECT id FROM entries WHERE tanggal = ? AND isDeleted = 0 AND id != ?').get(effectiveTanggal, entry.id);
+  if (duplicate) {
+    return res.status(409).json({ error: 'Catatan untuk tanggal ini sudah ada. Silakan edit catatan yang sudah ada.' });
+  }
+
   let photos = entry.photos || [];
 
   if (removePhotos) {
@@ -163,9 +184,9 @@ router.put('/:id', upload.array('photos', 10), async (req, res) => {
 
   const updated = {
     ...entry,
-    tanggal: tanggal || entry.tanggal,
-    hari: namaHari(tanggal || entry.tanggal),
-    kegiatan: kegiatan ?? entry.kegiatan,
+    tanggal: effectiveTanggal,
+    hari: namaHari(effectiveTanggal),
+    kegiatan: kegiatan !== undefined ? String(kegiatan).trim() : entry.kegiatan,
     photos
   };
   

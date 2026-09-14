@@ -5,6 +5,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const db = require('../db/sqlite');
+const { isValidDateStr } = require('../utils/dateHelper');
 
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -60,6 +61,10 @@ router.post('/', upload.single('attachment'), (req, res) => {
       return res.status(400).json({ error: 'Judul dan kategori wajib diisi.' });
     }
 
+    if (deadline && !isValidDateStr(deadline)) {
+      return res.status(400).json({ error: 'Format deadline tidak valid' });
+    }
+
     const newTask = {
       id: uuidv4(),
       title,
@@ -102,6 +107,10 @@ router.put('/:id', upload.single('attachment'), (req, res) => {
       return res.status(404).json({ error: 'Tugas tidak ditemukan.' });
     }
     
+    if (updates.deadline && !isValidDateStr(updates.deadline)) {
+      return res.status(400).json({ error: 'Format deadline tidak valid' });
+    }
+
     const allowedFields = ['title', 'category', 'subject', 'deadline', 'description', 'referenceUrl', 'status'];
     const newVals = { ...existing };
     for (const field of allowedFields) {

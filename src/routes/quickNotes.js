@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const dayjs = require('dayjs');
 const db = require('../db/sqlite');
+const { isValidDateStr } = require('../utils/dateHelper');
 
 const router = express.Router();
 
@@ -26,6 +27,10 @@ router.post('/', (req, res) => {
   const { tanggal, teks } = req.body;
   if (!tanggal || !teks || !teks.trim()) {
     return res.status(400).json({ error: 'Tanggal dan teks catatan wajib diisi' });
+  }
+
+  if (!isValidDateStr(tanggal)) {
+    return res.status(400).json({ error: 'Format tanggal tidak valid' });
   }
 
   const note = {

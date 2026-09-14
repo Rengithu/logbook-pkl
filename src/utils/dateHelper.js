@@ -1,10 +1,21 @@
 const dayjs = require('dayjs');
+const customParseFormat = require('dayjs/plugin/customParseFormat');
+dayjs.extend(customParseFormat); // untuk parsing ketat dayjs(str, 'YYYY-MM-DD', true)
 const getHoliday = require('../../public/js/holiday');
 const HARI_ID = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', "Jumat", 'Sabtu'];
 const BULAN_ID = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
+
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Validasi string tanggal YYYY-MM-DD: harus cocok format DAN valid secara kalender.
+// Parsing ketat — mis. "2026-02-30" ditolak, bukan di-rollover menjadi Maret.
+function isValidDateStr(str) {
+  if (typeof str !== 'string' || !DATE_ONLY_RE.test(str)) return false;
+  return dayjs(str, 'YYYY-MM-DD', true).isValid();
+}
 
 function namaHari(dateStr) {
   const d = dayjs(dateStr);
@@ -65,4 +76,4 @@ function weekRangeLabel(mondayKey, entries = []) {
 }
 
 
-module.exports = { namaHari, tanggalIndo, hariTanggalIndo, weekKey, weekRangeLabel, HARI_ID, BULAN_ID };
+module.exports = { namaHari, tanggalIndo, hariTanggalIndo, weekKey, weekRangeLabel, isValidDateStr, HARI_ID, BULAN_ID };

@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db/sqlite');
 const { v4: uuidv4 } = require('uuid');
 const dayjs = require('dayjs');
+const { isValidDateStr } = require('../utils/dateHelper');
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 const baseUrl = process.env.GEMINI_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -247,13 +248,22 @@ PENTING SOAL update_task_status: HANYA gunakan tool ini jika user secara eksplis
       
       try {
         if (name === 'create_task') {
-          const id = uuidv4();
-          const createdAt = new Date().toISOString();
-          db.prepare('INSERT INTO tasks (id, title, category, deadline, status, createdAt) VALUES (?, ?, ?, ?, ?, ?)')
-            .run(id, args.title, 'other', args.deadline || null, 'todo', createdAt);
-          const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
-          functionResponseData = { success: true, message: `Task '${args.title}' berhasil ditambahkan.`, task: newTask };
-          actionTaken = { type: 'create_task', data: newTask };
+          // Validasi deadline hasil argumen Gemini — jika tidak valid, JANGAN insert.
+          // Kirim functionResponse gagal supaya Gemini bisa merespons user dengan wajar (tanpa crash).
+          if (args.deadline && !isValidDateStr(args.deadline)) {
+            functionResponseData = {
+              success: false,
+              error: `Deadline '${args.deadline}' tidak valid. Format wajib YYYY-MM-DD dan tanggalnya harus benar-benar ada. Konfirmasi ulang tanggal ke user, atau buat task tanpa deadline.`
+            };
+          } else {
+            const id = uuidv4();
+            const createdAt = new Date().toISOString();
+            db.prepare('INSERT INTO tasks (id, title, category, deadline, status, createdAt) VALUES (?, ?, ?, ?, ?, ?)')
+              .run(id, args.title, 'other', args.deadline || null, 'todo', createdAt);
+            const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+            functionResponseData = { success: true, message: `Task '${args.title}' berhasil ditambahkan.`, task: newTask };
+            actionTaken = { type: 'create_task', data: newTask };
+          }
         } 
         else if (name === 'create_quick_note') {
           const id = uuidv4();
