@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useAppStore } from '../../store/appStore'
-import { formatTanggalIndo } from '../../utils/format'
+import { formatTanggalIndo, todayStr } from '../../utils/format'
 import * as api from '../../api/client'
 
 const COLORS = ['#e91e63', '#9c27b0', '#3f51b5', '#009688', '#ff9800', '#795548', '#607d8b', '#f44336']
@@ -9,7 +9,6 @@ const STATUS_ORDER: Record<string, number> = { 'todo': 1, 'in_progress': 2, 'don
 export function TasksPage() {
   const tasks = useAppStore((s) => s.tasks)
   const setTasks = useAppStore((s) => s.setTasks)
-  const searchQuery = useAppStore((s) => s.searchQuery)
   const taskSort = useAppStore((s) => s.taskSort)
   const setTaskSort = useAppStore((s) => s.setTaskSort)
   const taskFilter = useAppStore((s) => s.taskFilter)
@@ -25,10 +24,6 @@ export function TasksPage() {
     else if (taskFilter === 'status_in_progress') filteredTasks = filteredTasks.filter(t => t.status === 'in_progress')
     else if (taskFilter === 'status_done') filteredTasks = filteredTasks.filter(t => t.status === 'done')
   }
-  if (searchQuery) {
-    filteredTasks = filteredTasks.filter(t => t.title.toLowerCase().includes(searchQuery))
-  }
-
   // Sort
   filteredTasks.sort((a, b) => {
     switch (taskSort) {
@@ -148,7 +143,8 @@ function TaskRow({ task, onEdit, onDelete, onStatusToggle }: {
   else if (task.status === 'in_progress') statusBadge = <span className="status-badge status-in-progress">Proses</span>
   else statusBadge = <span className="status-badge status-done">Selesai</span>
 
-  const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'done'
+  // Bandingkan sebagai string YYYY-MM-DD (bukan Date) agar bebas masalah timezone
+  const isOverdue = task.deadline && task.deadline < todayStr() && task.status !== 'done'
 
   return (
     <div className="task-row">

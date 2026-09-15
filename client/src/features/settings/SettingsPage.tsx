@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAppStore } from '../../store/appStore'
 import * as api from '../../api/client'
 import { CustomDropdown } from '../../components/CustomDropdown'
@@ -14,6 +14,22 @@ export function SettingsPage() {
   const [openRouterKey, setOpenRouterKey] = useState(profile?.openRouterApiKey || '')
   const [ollamaUrl, setOllamaUrl] = useState(profile?.ollamaUrl || 'http://localhost:11434')
   const [showKey, setShowKey] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const statusRevertRef = useRef<number | null>(null)
+
+  // Snapshot terkini untuk flush-on-unmount (diperbarui di setiap render)
+  const pendingSaveRef = useRef({ apiKey, apiProvider, openRouterKey, ollamaUrl, isChanged: false })
+  pendingSaveRef.current = {
+    apiKey,
+    apiProvider,
+    openRouterKey,
+    ollamaUrl,
+    isChanged:
+      apiKey !== (profile?.geminiApiKey || '') ||
+      apiProvider !== (profile?.apiProvider || 'gemini') ||
+      openRouterKey !== (profile?.openRouterApiKey || '') ||
+      ollamaUrl !== (profile?.ollamaUrl || 'http://localhost:11434'),
+  }
 
   useEffect(() => {
     if (profile) {
@@ -37,6 +53,7 @@ export function SettingsPage() {
     if (!isChanged) return
 
     const handler = setTimeout(async () => {
+      setSaveStatus('saving')
       try {
         const updated = await api.updateProfile({ 
           geminiApiKey: apiKey,
@@ -45,14 +62,36 @@ export function SettingsPage() {
           ollamaUrl
         })
         setProfile(updated)
-        // Silently save
-      } catch (err: any) { 
-        showToast('Gagal menyimpan pengaturan: ' + err.message, true) 
+        setSaveStatus('saved')
+        if (statusRevertRef.current) clearTimeout(statusRevertRef.current)
+        statusRevertRef.current = window.setTimeout(() => setSaveStatus('idle'), 2000)
+      } catch (err: any) {
+        // Gagal: kembalikan ke idle (feedback error sudah lewat toast)
+        setSaveStatus('idle')
+        showToast('Gagal menyimpan pengaturan: ' + err.message, true)
       }
     }, 800) // 800ms debounce
 
     return () => clearTimeout(handler)
   }, [apiKey, apiProvider, openRouterKey, ollamaUrl, profile, setProfile, showToast])
+
+  // Flush save yang masih pending saat unmount (mis. pindah halaman sebelum 800ms) — tanpa debounce
+  useEffect(() => {
+    return () => {
+      if (statusRevertRef.current) clearTimeout(statusRevertRef.current)
+      const pending = pendingSaveRef.current
+      if (pending.isChanged) {
+        api.updateProfile({
+          geminiApiKey: pending.apiKey,
+          apiProvider: pending.apiProvider,
+          openRouterApiKey: pending.openRouterKey,
+          ollamaUrl: pending.ollamaUrl,
+        }).catch((err: any) => {
+          useAppStore.getState().showToast('Gagal menyimpan pengaturan: ' + (err?.message || err), true)
+        })
+      }
+    }
+  }, [])
 
   return (
     <section id="tab-settings" className="tab-panel active">
@@ -133,6 +172,20 @@ export function SettingsPage() {
               <span className="material-symbols-outlined" style={{ fontSize: 16 }}>cloud_done</span>
               Semua perubahan di halaman ini disimpan secara otomatis
             </p>
+            {saveStatus !== 'idle' && (
+              <p
+                style={{
+                  marginTop: 8, marginBottom: 0, fontSize: 13,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  color: saveStatus === 'saving' ? 'var(--fg-secondary)' : 'var(--success)'
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+                  {saveStatus === 'saving' ? 'sync' : 'check_circle'}
+                </span>
+                {saveStatus === 'saving' ? 'Menyimpan...' : 'Tersimpan ✓'}
+              </p>
+            )}
         </div>
       </div>
     </section>

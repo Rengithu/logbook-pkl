@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAppStore } from '../../store/appStore'
+import { todayStr } from '../../utils/format'
 import { getHoliday } from '../../utils/holidays'
 
 const MONTH_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -46,7 +47,8 @@ export function CalendarPage() {
 
     let taskColor = 'var(--success)'
     if (dayTasks.length > 0) {
-      const hasOverdue = dayTasks.some(t => t.deadline && new Date(t.deadline) < today && t.status !== 'done')
+      // Bandingkan sebagai string YYYY-MM-DD (bukan Date) agar bebas masalah timezone
+      const hasOverdue = dayTasks.some(t => t.deadline && t.deadline < todayStr() && t.status !== 'done')
       const hasTodo = dayTasks.some(t => t.status !== 'done')
       if (hasOverdue) taskColor = 'var(--danger)'
       else if (hasTodo) taskColor = 'var(--warning)'

@@ -102,7 +102,6 @@ export function EntriesPage() {
     clearSelectedEntries()
   }, [currentView, clearSelectedEntries])
 
-  const searchQuery = useAppStore((s) => s.searchQuery)
   const entriesViewMode = useAppStore((s) => s.entriesViewMode)
   const setEntriesViewMode = useAppStore((s) => s.setEntriesViewMode)
   const selectedEntries = useAppStore((s) => s.selectedEntries)
@@ -116,17 +115,8 @@ export function EntriesPage() {
   const trashedTasks = useAppStore((s) => s.trashedTasks)
   const trashedSubjects = useAppStore((s) => s.trashedSubjects)
 
-  // 1. Memoize pencarian (Filter Entries)
-  const q = (searchQuery || '').toLowerCase()
-
-  const filteredEntries = useMemo(() => {
-    if (!q) return currentEntries
-    return currentEntries.filter(e =>
-      (e.kegiatan && e.kegiatan.toLowerCase().includes(q)) ||
-      (e.hari && e.hari.toLowerCase().includes(q)) ||
-      (e.tanggal && e.tanggal.includes(q))
-    )
-  }, [currentEntries, q])
+  // 1. Daftar entri (tanpa filter — fitur pencarian tidak digunakan)
+  const filteredEntries = currentEntries
 
   // 2. Memoize pengelompokan minggu & pengurutan (Week Grouping)
   const { weekMap, sortedWeekKeys } = useMemo(() => {
@@ -157,18 +147,9 @@ export function EntriesPage() {
     return getWeekKey(minDate)
   }, [entries])
 
-  // 3. Memoize filter Tempat Sampah (Trashed Items)
-  const filteredTrashedTasks = useMemo(() => {
-    if (!trashedTasks) return []
-    if (!q) return trashedTasks
-    return trashedTasks.filter(t => t.title.toLowerCase().includes(q))
-  }, [trashedTasks, q])
-
-  const filteredTrashedSubjects = useMemo(() => {
-    if (!trashedSubjects) return []
-    if (!q) return trashedSubjects
-    return trashedSubjects.filter(s => s.name.toLowerCase().includes(q))
-  }, [trashedSubjects, q])
+  // 3. Daftar item Tempat Sampah (tanpa filter — fitur pencarian tidak digunakan)
+  const filteredTrashedTasks = trashedTasks || []
+  const filteredTrashedSubjects = trashedSubjects || []
 
   async function handleDeleteEntry(id: string, force = false) {
     try {

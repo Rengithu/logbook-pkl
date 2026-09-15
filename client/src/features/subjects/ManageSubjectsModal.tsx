@@ -10,7 +10,6 @@ export function ManageSubjectsModal() {
   const subjects = useAppStore((s) => s.subjects)
   const setSubjects = useAppStore((s) => s.setSubjects)
   const showToast = useAppStore((s) => s.showToast)
-  const searchQuery = useAppStore((s) => s.searchQuery)
   const [newName, setNewName] = useState('')
   // Konfirmasi hapus — memakai komponen ConfirmModal yang sudah ada (juga dipakai AiChatPanel)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
@@ -18,7 +17,7 @@ export function ManageSubjectsModal() {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
 
-  const filtered = subjects.filter(s => !searchQuery || s.name.toLowerCase().includes(searchQuery))
+  const filtered = subjects
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()

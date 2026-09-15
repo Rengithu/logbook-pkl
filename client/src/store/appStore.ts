@@ -13,7 +13,6 @@ interface AppState {
     profile: Profile | null
     editingId: string | null
     editingTask: Task | null
-    searchQuery: string
     taskSort: string
     taskFilter: string
     currentTheme: 'light' | 'dark' | 'system'
@@ -42,7 +41,6 @@ interface AppState {
     setTrashedSubjects: (subjects: Subject[]) => void
     setProfile: (profile: Profile) => void
     setEditingId: (id: string | null) => void
-    setSearchQuery: (query: string) => void
     setTaskSort: (sort: string) => void
     setTaskFilter: (filter: string) => void
     setDashSubjectFilter: (filter: string) => void
@@ -81,7 +79,6 @@ export const useAppStore = create<AppState>((set) => ({
     profile: null,
     editingId: null,
     editingTask: null,
-    searchQuery: '',
     taskSort: 'date_asc',
     taskFilter: 'all',
     dashSubjectFilter: 'all',
@@ -108,7 +105,6 @@ export const useAppStore = create<AppState>((set) => ({
     setTrashedSubjects: (trashedSubjects) => set({ trashedSubjects }),
     setProfile: (profile) => set({ profile }),
     setEditingId: (editingId) => set({ editingId }),
-    setSearchQuery: (searchQuery) => set({ searchQuery }),
     setTaskSort: (taskSort) => set({ taskSort }),
     setTaskFilter: (taskFilter) => set({ taskFilter }),
     setDashSubjectFilter: (dashSubjectFilter) => set({ dashSubjectFilter }),

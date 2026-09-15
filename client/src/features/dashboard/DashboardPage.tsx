@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { useAppStore } from '../../store/appStore'
-import { formatTanggalIndo } from '../../utils/format'
+import { formatTanggalIndo, todayStr } from '../../utils/format'
 import { QuickNoteWidget } from '../../components/QuickNoteWidget'
 
 export function DashboardPage() {
@@ -49,13 +49,13 @@ export function DashboardPage() {
     }
   }, [dashSubjectFilter])
 
-  const now = new Date()
   const todo = tasks.filter(t => t.status === 'todo').length
   const inProgress = tasks.filter(t => t.status === 'in_progress').length
   const done = tasks.filter(t => t.status === 'done').length
+  // Bandingkan sebagai string YYYY-MM-DD (bukan Date) agar bebas masalah timezone
   const overdue = tasks.filter(t => {
     if (t.status === 'done' || !t.deadline) return false
-    return new Date(t.deadline) < now
+    return t.deadline < todayStr()
   }).length
 
   // Upcoming tasks
@@ -117,7 +117,7 @@ export function DashboardPage() {
             <p className="hint" style={{ gridColumn: '1 / -1' }}>Tidak ada tugas mendatang untuk {currentFilter}.</p>
           ) : (
             upcomingFiltered.map(t => {
-              const isOverdue = new Date(t.deadline!) < now
+              const isOverdue = t.deadline! < todayStr()
               return (
                 <div key={t.id} className="dash-list-card" onClick={() => openAddTaskModal(t)} style={{ cursor: 'pointer', height: '96px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div className="dash-list-card-title" title={t.title}>{t.title}</div>

@@ -37,6 +37,9 @@
   --danger-bg: rgba(251, 73, 52, 0.15);
   --danger-border: #cc241d;
 
+  /* Success (Gruvbox Green) */
+  --success: #b8bb26;
+
   /* Forms & Cards */
   --input-bg: #1d2021; /* bg0_h (darker for inputs) */
   --card-shadow: none; /* M3 flat surfaces */
@@ -76,6 +79,9 @@
   --danger: #9d0006; /* red */
   --danger-hover: #c14a4a;
   --danger-bg: rgba(157, 0, 6, 0.1);
+
+  /* Success (Gruvbox Green) */
+  --success: #79740e;
   --danger-border: #cc241d;
 
   /* Forms & Cards */
