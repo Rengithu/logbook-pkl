@@ -30,9 +30,26 @@ app.use('/api/contacts', contactsRoutes);
 app.use('/api/tools', toolsRoutes);
 app.use('/api/quick-notes', quickNotesRoutes);
 
+// 404 JSON untuk path /api/* yang tidak cocok router manapun
+// (agar client tidak menerima HTML 404 default Express yang gagal di-parse sebagai JSON)
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'Endpoint tidak ditemukan' });
+});
+
 // Basic error handler (e.g. multer file-type / size errors)
 app.use((err, req, res, next) => {
   console.error(err);
+  // Petakan kode error multer spesifik ke pesan Bahasa Indonesia
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: 'Ukuran file melebihi batas maksimal yang diizinkan' });
+  }
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    return res.status(400).json({ error: 'Jumlah file melebihi batas maksimal' });
+  }
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    return res.status(400).json({ error: 'Jumlah atau jenis file melebihi batas maksimal' });
+  }
+  // Bukan error multer — pertahankan pesan custom (mis. dari fileFilter, sudah Bahasa Indonesia)
   res.status(400).json({ error: err.message || 'Terjadi kesalahan' });
 });
 

@@ -1,14 +1,29 @@
 import { useState } from 'react'
+import { Modal } from '../../components/Modal'
 import { useAppStore } from '../../store/appStore'
-import { todayStr } from '../../utils/format'
+import { todayStr, formatTanggalIndo } from '../../utils/format'
 import { getHoliday } from '../../utils/holidays'
 
 const MONTH_NAMES = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 
+// Label & warna status task untuk panel detail hari
+const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
+  todo: { label: 'Belum Mulai', color: 'var(--warning)', bg: 'var(--bg-elevated)' },
+  in_progress: { label: 'Proses', color: 'var(--primary)', bg: 'var(--primary-badge)' },
+  done: { label: 'Selesai', color: 'var(--success)', bg: 'var(--bg-elevated)' },
+}
+
 export function CalendarPage() {
   const tasks = useAppStore((s) => s.tasks)
   const entries = useAppStore((s) => s.entries)
+  const openAddEntryModal = useAppStore((s) => s.openAddEntryModal)
+  const setEditingId = useAppStore((s) => s.setEditingId)
   const [viewDate, setViewDate] = useState(new Date())
+  // Tanggal terpilih — panel daftar task hari itu
+  const [detailDate, setDetailDate] = useState<string | null>(null)
+
+  const detailTasks = detailDate ? tasks.filter(t => t.deadline === detailDate) : []
+  const detailEntry = detailDate ? entries.find(e => e.tanggal === detailDate) : undefined
 
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
@@ -26,6 +41,19 @@ export function CalendarPage() {
   }
   function goToday() {
     setViewDate(new Date())
+  }
+
+  // Sel yang punya task -> panel detail; sel yang hanya jurnal -> buka modal edit entry
+  function handleDayClick(dateStr: string) {
+    if (tasks.some(t => t.deadline === dateStr)) {
+      setDetailDate(dateStr)
+      return
+    }
+    const entry = entries.find(e => e.tanggal === dateStr)
+    if (entry) {
+      setEditingId(entry.id)
+      openAddEntryModal()
+    }
   }
 
   // Build calendar cells
@@ -54,8 +82,23 @@ export function CalendarPage() {
       else if (hasTodo) taskColor = 'var(--warning)'
     }
 
+    const clickable = dayTasks.length > 0 || dayEntries.length > 0
+    const ariaParts = [
+      dayEntries.length > 0 ? `${dayEntries.length} jurnal` : '',
+      dayTasks.length > 0 ? `${dayTasks.length} tugas` : '',
+    ].filter(Boolean).join(', ')
+
     cells.push(
-      <div key={i} className="calendar-cell" style={{ background: 'var(--bg-surface)', padding: 8, display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', minHeight: 0 }}>
+      <div
+        key={i}
+        className={`calendar-cell${clickable ? ' calendar-cell-clickable' : ''}`}
+        style={{ background: 'var(--bg-surface)', padding: 8, display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', minHeight: 0 }}
+        role={clickable ? 'button' : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        aria-label={clickable ? `Tanggal ${i}${ariaParts ? `, ${ariaParts}` : ''}` : undefined}
+        onClick={clickable ? () => handleDayClick(dateStr) : undefined}
+        onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDayClick(dateStr) } } : undefined}
+      >
         <div className="calendar-cell-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4, flexWrap: 'wrap', gap: 2 }}>
           <div className="calendar-cell-badges" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {isToday ? (
@@ -88,7 +131,8 @@ export function CalendarPage() {
   }
 
   return (
-    <section id="tab-calendar" className="tab-panel active">
+    <>
+      <section id="tab-calendar" className="tab-panel active">
       <div style={{ padding: '16px 32px', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div className="page-header" style={{ marginBottom: 16 }}>
           <div>
@@ -116,6 +160,53 @@ export function CalendarPage() {
           </div>
         </div>
       </div>
-    </section>
+      </section>
+
+      {detailDate && (
+        <Modal isOpen onClose={() => setDetailDate(null)} style={{ maxWidth: 380 }}>
+          <div className="modal-header">
+            <div>
+              <h2 className="modal-title">{formatTanggalIndo(detailDate)}</h2>
+              <p className="modal-sub">Tugas dengan tenggat di tanggal ini</p>
+            </div>
+            <button type="button" className="btn-close" onClick={() => setDetailDate(null)} title="Tutup">
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <div className="modal-body">
+            {detailTasks.length === 0 ? (
+              <p className="hint">Tidak ada tugas pada tanggal ini.</p>
+            ) : (
+              detailTasks.map(t => {
+                const meta = STATUS_META[t.status] || { label: t.status, color: 'var(--fg-secondary)', bg: 'var(--bg-elevated)' }
+                return (
+                  <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 6, marginBottom: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.title}>{t.title}</span>
+                    <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 600, color: meta.color, background: meta.bg, padding: '2px 10px', borderRadius: 100 }}>
+                      {meta.label}
+                    </span>
+                  </div>
+                )
+              })
+            )}
+            {detailEntry && (
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
+                onClick={() => {
+                  setDetailDate(null)
+                  setEditingId(detailEntry.id)
+                  openAddEntryModal()
+                }}
+              >
+                <span className="material-symbols-outlined">edit</span>
+                <span>Buka Jurnal Tanggal Ini</span>
+              </button>
+            )}
+          </div>
+        </Modal>
+      )}
+    </>
   )
 }

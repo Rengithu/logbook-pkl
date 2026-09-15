@@ -21,6 +21,7 @@ export function AddTaskModal() {
   const [description, setDescription] = useState('')
   const [referenceUrl, setReferenceUrl] = useState('')
   const [attachment, setAttachment] = useState<File | null>(null)
+  const [removeAttachment, setRemoveAttachment] = useState(false)
   const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false)
   const [subjectSearch, setSubjectSearch] = useState('')
   const [saving, setSaving] = useState(false)
@@ -48,6 +49,7 @@ export function AddTaskModal() {
     setDescription('')
     setReferenceUrl('')
     setAttachment(null)
+    setRemoveAttachment(false)
     setSubjectDropdownOpen(false)
     setSubjectSearch('')
     onClose()
@@ -67,6 +69,7 @@ export function AddTaskModal() {
     data.description = description
     if (referenceUrl) data.referenceUrl = referenceUrl
     if (attachment) data.attachment = attachment
+    if (removeAttachment) data.removeAttachment = 'true'
 
     try {
       if (editingTask) {
@@ -161,9 +164,60 @@ export function AddTaskModal() {
             </div>
             <div className="form-row" style={{ marginBottom: 0 }}>
               <label htmlFor="taskAttachment">Lampiran (Opsional)</label>
-              <input type="file" id="taskAttachment" accept="*/*" style={{ padding: 8, fontSize: 13 }} onChange={e => setAttachment(e.target.files?.[0] || null)} />
+              <input
+                type="file"
+                id="taskAttachment"
+                accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+                style={{ padding: 8, fontSize: 13 }}
+                onChange={e => {
+                  const f = e.target.files?.[0] || null
+                  setAttachment(f)
+                  if (f) setRemoveAttachment(false) // memilih file baru = membatalkan hapus lampiran
+                }}
+              />
             </div>
           </div>
+
+          {/* Lampiran yang sudah tersimpan (mode edit) dengan tombol hapus */}
+          {isEditing && editingTask?.attachmentPath && !attachment && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 8, fontSize: 13 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16, color: removeAttachment ? 'var(--danger)' : 'var(--fg-secondary)' }}>
+                {removeAttachment ? 'delete' : 'attach_file'}
+              </span>
+              <span
+                style={{
+                  color: removeAttachment ? 'var(--danger)' : 'var(--fg-primary)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                }}
+                title={editingTask.attachmentName || 'Lampiran'}
+              >
+                {editingTask.attachmentName || 'Lampiran'}{removeAttachment ? ' — akan dihapus saat disimpan' : ''}
+              </span>
+              <button
+                type="button"
+                className="btn-icon btn-sm"
+                title={removeAttachment ? 'Batalkan Hapus Lampiran' : 'Hapus Lampiran'}
+                onClick={() => setRemoveAttachment(!removeAttachment)}
+                style={{ marginLeft: 'auto', flexShrink: 0, width: 24, height: 24 }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+                  {removeAttachment ? 'undo' : 'close'}
+                </span>
+              </button>
+              {!removeAttachment && (
+                <a
+                  href={`/uploads/${editingTask.attachmentPath}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Buka lampiran"
+                  className="btn-icon btn-sm"
+                  style={{ flexShrink: 0, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>
+                </a>
+              )}
+            </div>
+          )}
 
         </div>
         <div style={{ display: 'flex', width: '100%', margin: 0, padding: 0 }}>

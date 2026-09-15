@@ -46,9 +46,14 @@ async function callGemini(promptText) {
   });
 
   if (!response.ok) {
+    // Body mentah hanya untuk log debugging — JANGAN dikirim ke client
     const errBody = await response.text();
     console.error('Gemini API error:', response.status, errBody);
-    throw { status: 502, message: `Gagal menghubungi Gemini API (status ${response.status})` };
+    throw {
+      status: 502,
+      busy: response.status === 503 || response.status === 429,
+      message: `Gagal menghubungi Gemini API (status ${response.status})`
+    };
   }
 
   const data = await response.json();
@@ -220,12 +225,22 @@ PENTING SOAL update_task_status: HANYA gunakan tool ini jika user secara eksplis
         body: JSON.stringify(body)
       });
       if (r.status === 503 || r.status === 429) {
+        // Body mentah hanya untuk log debugging — JANGAN dimasukkan ke pesan error
         const txt = await r.text();
-        lastError = new Error(`Gemini API error (status ${r.status}): ${txt}`);
-        console.warn(`[AI] Attempt ${attempt + 1} failed (${r.status}), retrying...`);
+        console.warn(`[AI] Attempt ${attempt + 1} failed (${r.status}), retrying...`, txt);
+        lastError = new Error(`Gemini API error (status ${r.status})`);
+        lastError.status = r.status;
+        lastError.busy = true;
         continue;
       }
-      if (!r.ok) throw new Error(`Gemini API error (status ${r.status}): ${await r.text()}`);
+      if (!r.ok) {
+        // Body mentah hanya untuk log debugging — JANGAN dimasukkan ke pesan error
+        const rawBody = await r.text();
+        console.error('[AI] Gemini API error:', r.status, rawBody);
+        const err = new Error(`Gemini API error (status ${r.status})`);
+        err.status = r.status;
+        throw err;
+      }
       return r.json();
     }
     throw lastError;
@@ -334,7 +349,11 @@ PENTING SOAL update_task_status: HANYA gunakan tool ini jika user secara eksplis
 
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: e.message || 'Gagal memproses permintaan ke Gemini API' });
+    // Pesan ringkas untuk client — body mentah Gemini hanya di log
+    const busy = !!(e && (e.busy || e.status === 503 || e.status === 429));
+    res.status(busy ? 503 : 502).json({
+      error: busy ? 'Gemini sedang sibuk, coba lagi sebentar' : 'Gagal memproses permintaan AI'
+    });
   }
 });
 
@@ -358,9 +377,13 @@ Gunakan bahasa yang natural dan tidak bertele-tele, seperti gaya bahasa sehari-h
     const resultText = await callGemini(fullPrompt);
     res.json({ text: resultText });
   } catch (e) {
-    if (e.status) return res.status(e.status).json({ error: e.message });
     console.error(e);
-    res.status(500).json({ error: 'Gagal memproses permintaan ke Gemini API' });
+    // Pesan ringkas untuk client — body mentah Gemini hanya di log
+    const busy = !!(e && (e.busy || e.status === 503 || e.status === 429));
+    if (busy) return res.status(503).json({ error: 'Gemini sedang sibuk, coba lagi sebentar' });
+    // Pesan callGemini yang sudah actionable (mis. API Key belum diisi) tetap diteruskan
+    if (e.status) return res.status(e.status).json({ error: e.message });
+    res.status(502).json({ error: 'Gagal memproses permintaan AI' });
   }
 });
 

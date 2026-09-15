@@ -119,7 +119,29 @@ router.put('/:id', upload.single('attachment'), (req, res) => {
       }
     }
     
-    if (req.file) {
+    // Hapus lampiran tanpa pengganti (removeAttachment dikirim sebagai 'true' dari FormData)
+    const wantsRemove = updates.removeAttachment === 'true' || updates.removeAttachment === true;
+    if (wantsRemove) {
+      if (existing.attachmentPath) {
+        const oldPath = path.join(UPLOADS_DIR, existing.attachmentPath);
+        if (fs.existsSync(oldPath)) {
+          fs.promises.unlink(oldPath).catch(console.error); // pola cleanup async seperti entries.js
+        }
+      }
+      if (req.file) {
+        // File baru terlanjur diupload bersama removeAttachment — buang agar tidak jadi orphan
+        fs.promises.unlink(req.file.path).catch(console.error);
+      }
+      newVals.attachmentPath = null;
+      newVals.attachmentName = null;
+    } else if (req.file) {
+      // Ganti lampiran: hapus file lama dari disk SEBELUM menyimpan yang baru
+      if (existing.attachmentPath) {
+        const oldPath = path.join(UPLOADS_DIR, existing.attachmentPath);
+        if (fs.existsSync(oldPath)) {
+          fs.promises.unlink(oldPath).catch(console.error);
+        }
+      }
       newVals.attachmentPath = req.file.filename;
       newVals.attachmentName = path.basename(req.file.originalname);
     }
