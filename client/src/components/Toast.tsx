@@ -20,7 +20,7 @@ export function Toast() {
   if (!toast) return null
 
   return (
-    <div key={toast.id} className={`toast show ${toast.isError ? 'error' : ''}`}>
+    <div key={toast.id} role="status" aria-live="polite" className={`toast show ${toast.isError ? 'error' : ''}`}>
       <span>{toast.message}</span>
       {toast.action && (
         <button

@@ -24,6 +24,28 @@ interface ChatMessage {
   pastedChips?: PastedChip[]
 }
 
+const DEFAULT_GREETING: ChatMessage = { role: 'assistant', content: 'Halo! Ada yang bisa saya bantu terkait PKL atau tugas hari ini?' }
+const CHAT_HISTORY_KEY = 'ai-chat-history'
+
+// Restore riwayat chat dari localStorage — fallback ke sambutan default jika kosong/rusak
+function loadChatHistory(): ChatMessage[] {
+  try {
+    const saved = localStorage.getItem(CHAT_HISTORY_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed)) {
+        const valid = parsed.filter(
+          m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string'
+        )
+        if (valid.length > 0) return valid
+      }
+    }
+  } catch {
+    /* localStorage kosong/rusak — pakai sambutan default */
+  }
+  return [DEFAULT_GREETING]
+}
+
 const SUGGESTION_CHIPS = [
   { icon: 'edit_note', label: 'Catat kegiatan', prefill: 'catat: ' },
   { icon: 'add_task', label: 'Tambah task', prefill: 'tambahin task: ' },
@@ -107,14 +129,21 @@ export function AiChatPanel() {
   const setTasks = useAppStore(s => s.setTasks)
   const tasks = useAppStore(s => s.tasks)
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', content: 'Halo! Ada yang bisa saya bantu terkait PKL atau tugas hari ini?' }
-  ])
+  const [messages, setMessages] = useState<ChatMessage[]>(loadChatHistory)
   const [input, setInput] = useState('')
   const [pastedChips, setPastedChips] = useState<PastedChip[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Persistensi riwayat chat — semua field ChatMessage serializable, simpan setiap kali berubah
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(messages))
+    } catch {
+      /* abaikan error kuota/privasi localStorage */
+    }
+  }, [messages])
 
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
   const [activeMentions, setActiveMentions] = useState<MentionRef[]>([])
@@ -247,7 +276,7 @@ export function AiChatPanel() {
         })
         const data = await res.json()
         if (data.error) throw new Error(data.error.message || 'Gagal menghubungi OpenRouter')
-        reply = data.choices[0].message.content
+        reply = data.choices?.[0]?.message?.content || 'Tidak ada respons dari model.'
       }
       else if (profile?.apiProvider === 'ollama') {
         const url = profile.ollamaUrl || 'http://localhost:11434'
@@ -265,7 +294,7 @@ export function AiChatPanel() {
         })
         const data = await res.json()
         if (data.error) throw new Error(data.error || 'Gagal menghubungi Ollama')
-        reply = data.message.content
+        reply = data.message?.content || 'Tidak ada respons dari model.'
       }
       else {
         const history = apiMessages
@@ -387,6 +416,18 @@ export function AiChatPanel() {
           </span>
         </div>
         <div style={{ display: 'flex', gap: 4, alignSelf: 'flex-start', margin: '-4px -8px 0 0' }}>
+          <button
+            className="btn-icon"
+            onClick={() => {
+              if (!window.confirm('Hapus seluruh riwayat percakapan AI? Tindakan ini tidak bisa dibatalkan.')) return
+              setMessages([DEFAULT_GREETING])
+              try { localStorage.removeItem(CHAT_HISTORY_KEY) } catch { /* abaikan */ }
+            }}
+            style={{ width: 32, height: 32 }}
+            title="Hapus riwayat chat"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>delete</span>
+          </button>
           <button className="btn-icon" onClick={toggleAiChatExpanded} style={{ width: 32, height: 32 }} title={isAiChatExpanded ? "Perkecil" : "Perbesar"}>
             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
               {isAiChatExpanded ? 'close_fullscreen' : 'open_in_full'}

@@ -7,6 +7,15 @@ interface ConfirmModalProps {
 }
 
 export function ConfirmModal({ message, onConfirm, onCancel }: ConfirmModalProps) {
+  // Tutup dengan Escape — pola listener sama seperti Modal.tsx
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onCancel])
+
   return (
     <div className="modal-overlay open" onClick={onCancel}>
       <div className="modal-card" style={{ maxWidth: 400, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>

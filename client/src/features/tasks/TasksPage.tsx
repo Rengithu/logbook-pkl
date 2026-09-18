@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { useAppStore } from '../../store/appStore'
+import { Dropdown } from '../../components/Dropdown'
 import { formatTanggalIndo, todayStr } from '../../utils/format'
 import * as api from '../../api/client'
 
@@ -193,32 +194,27 @@ function FilterDropdown({ value, onChange }: { value: string; onChange: (v: stri
     { value: 'status_done', label: 'Selesai' },
   ]
   return (
-    <div className="custom-select-wrapper" style={{ width: 'auto' }}>
-      <button className="btn-icon sort-btn-outline custom-select-trigger" title="Saring Tugas" style={{ width: 36, height: 36, borderRadius: '50%', background: 'transparent', padding: 0, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none' }}
-        onClick={(e) => {
-          e.stopPropagation()
-          const wrapper = (e.target as HTMLElement).closest('.custom-select-wrapper')
-          wrapper?.classList.toggle('open')
-        }}
-      >
-        <span className="material-symbols-outlined" style={{ fontSize: 20 }}>filter_list</span>
-      </button>
-      <div className="custom-select-dropdown" style={{ top: '100%', right: 0, left: 'auto', minWidth: 200 }}>
-        <div className="custom-select-options">
+    <Dropdown
+      align="right"
+      wrapperClassName="custom-select-wrapper"
+      trigger={
+        <button className="btn-icon sort-btn-outline custom-select-trigger" title="Saring Tugas" style={{ width: 36, height: 36, borderRadius: '50%', background: 'transparent', padding: 0, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>filter_list</span>
+        </button>
+      }
+    >
+      {(close) => (
+        <>
           {filters.map(f => (
             <div key={f.value} className="custom-select-option" style={{ background: value === f.value ? 'var(--bg-elevated)' : 'transparent' }}
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange(f.value)
-                ;(e.target as HTMLElement).closest('.custom-select-wrapper')?.classList.remove('open')
-              }}
+              onClick={() => { onChange(f.value); close() }}
             >
               <div className="option-label">{f.label}</div>
             </div>
           ))}
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    </Dropdown>
   )
 }
 
@@ -230,32 +226,27 @@ function SortDropdown({ value: _value, onChange }: { value: string; onChange: (v
     { value: 'status_asc', icon: 'pending_actions', label: 'Status (Belum Mulai)' },
   ]
   return (
-    <div className="custom-select-wrapper" style={{ width: 'auto' }}>
-      <button className="btn-icon sort-btn-outline custom-select-trigger" title="Urutkan" style={{ width: 36, height: 36, borderRadius: '50%', background: 'transparent', padding: 0, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none' }}
-        onClick={(e) => {
-          e.stopPropagation()
-          const wrapper = (e.target as HTMLElement).closest('.custom-select-wrapper')
-          wrapper?.classList.toggle('open')
-        }}
-      >
-        <span className="material-symbols-outlined" style={{ fontSize: 20 }}>sort</span>
-      </button>
-      <div className="custom-select-dropdown" style={{ top: '100%', right: 0, left: 'auto', minWidth: 200 }}>
-        <div className="custom-select-options">
+    <Dropdown
+      align="right"
+      wrapperClassName="custom-select-wrapper"
+      trigger={
+        <button className="btn-icon sort-btn-outline custom-select-trigger" title="Urutkan" style={{ width: 36, height: 36, borderRadius: '50%', background: 'transparent', padding: 0, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>sort</span>
+        </button>
+      }
+    >
+      {(close) => (
+        <>
           {sorts.map(s => (
             <div key={s.value} className="custom-select-option"
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange(s.value)
-                ;(e.target as HTMLElement).closest('.custom-select-wrapper')?.classList.remove('open')
-              }}
+              onClick={() => { onChange(s.value); close() }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: 18, transform: s.flip ? 'scaleY(-1)' : undefined }}>{s.icon}</span>
               <div className="option-label">{s.label}</div>
             </div>
           ))}
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    </Dropdown>
   )
 }

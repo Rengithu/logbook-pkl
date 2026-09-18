@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Modal } from '../../components/Modal'
+import { Dropdown } from '../../components/Dropdown'
 import { CustomDatePicker } from '../../components/CustomDatePicker'
 import { useAppStore } from '../../store/appStore'
 import * as api from '../../api/client'
@@ -22,7 +23,6 @@ export function AddTaskModal() {
   const [referenceUrl, setReferenceUrl] = useState('')
   const [attachment, setAttachment] = useState<File | null>(null)
   const [removeAttachment, setRemoveAttachment] = useState(false)
-  const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false)
   const [subjectSearch, setSubjectSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const isSubmittingRef = useRef(false)
@@ -50,7 +50,6 @@ export function AddTaskModal() {
     setReferenceUrl('')
     setAttachment(null)
     setRemoveAttachment(false)
-    setSubjectDropdownOpen(false)
     setSubjectSearch('')
     onClose()
   }
@@ -115,36 +114,41 @@ export function AddTaskModal() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <div className="form-row" style={{ display: 'block', marginBottom: 0 }}>
               <label>Mata Pelajaran (Opsional)</label>
-              <div className={`custom-select-wrapper ${subjectDropdownOpen ? 'open' : ''}`}>
-                <div className="custom-select-trigger" onClick={() => setSubjectDropdownOpen(!subjectDropdownOpen)}>
-                  <div className="custom-select-value">
-                    <div className="custom-select-placeholder" style={{ color: subject ? 'var(--fg-primary)' : 'var(--fg-muted)' }}>
-                      {subject || '-- Pilih Mapel --'}
+              <Dropdown
+                align="left"
+                wrapperClassName="custom-select-wrapper"
+                trigger={
+                  <div className="custom-select-trigger">
+                    <div className="custom-select-value">
+                      <div className="custom-select-placeholder" style={{ color: subject ? 'var(--fg-primary)' : 'var(--fg-muted)' }}>
+                        {subject || '-- Pilih Mapel --'}
+                      </div>
                     </div>
+                    <span className="material-symbols-outlined custom-select-arrow">arrow_drop_down</span>
                   </div>
-                  <span className="material-symbols-outlined custom-select-arrow">arrow_drop_down</span>
-                </div>
-                <div className="custom-select-dropdown">
-                  <div className="custom-select-search-box">
-                    <span className="material-symbols-outlined search-icon">search</span>
-                    <input type="text" placeholder="Cari mapel..." autoComplete="off" value={subjectSearch} onChange={e => setSubjectSearch(e.target.value)} onClick={e => e.stopPropagation()} />
-                  </div>
-                  <div className="custom-select-options">
-                    <div className="custom-select-option" onClick={() => { setSubject(''); setSubjectDropdownOpen(false) }}>
+                }
+              >
+                {(close) => (
+                  <>
+                    <div className="custom-select-search-box">
+                      <span className="material-symbols-outlined search-icon">search</span>
+                      <input type="text" placeholder="Cari mapel..." autoComplete="off" value={subjectSearch} onChange={e => setSubjectSearch(e.target.value)} />
+                    </div>
+                    <div className="custom-select-option" onClick={() => { setSubject(''); close() }}>
                       <div className="option-avatar" style={{ background: 'transparent', color: 'var(--fg-muted)', fontSize: 16 }}>
                         <span className="material-symbols-outlined">block</span>
                       </div>
                       <div className="option-label">-- Kosongkan Mapel --</div>
                     </div>
                     {filteredSubjects.map((sub, i) => (
-                      <div key={sub.id} className={`custom-select-option ${subject === sub.name ? 'selected' : ''}`} onClick={() => { setSubject(sub.name); setSubjectDropdownOpen(false) }}>
+                      <div key={sub.id} className={`custom-select-option ${subject === sub.name ? 'selected' : ''}`} onClick={() => { setSubject(sub.name); close() }}>
                         <div className="option-avatar" style={{ background: COLORS[i % COLORS.length] }}>{sub.name.charAt(0).toUpperCase()}</div>
                         <div className="option-label">{sub.name}</div>
                       </div>
                     ))}
-                  </div>
-                </div>
-              </div>
+                  </>
+                )}
+              </Dropdown>
             </div>
             <div className="form-row" style={{ marginBottom: 0 }}>
               <label htmlFor="taskDeadline">Tenggat Waktu (Opsional)</label>
