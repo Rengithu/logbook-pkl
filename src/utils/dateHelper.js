@@ -1,7 +1,7 @@
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat); // untuk parsing ketat dayjs(str, 'YYYY-MM-DD', true)
-const getHoliday = require('../../public/js/holiday');
+const getHoliday = require('./holiday');
 const HARI_ID = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', "Jumat", 'Sabtu'];
 const BULAN_ID = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',

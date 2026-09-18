@@ -59,12 +59,6 @@ export function weekRangeLabelClient(mondayKey: string, entries: { tanggal: stri
   return `${startDate.getDate()} ${bulanSingkat[startDate.getMonth()]} - ${endDate.getDate()} ${bulanSingkat[endDate.getMonth()]} ${endDate.getFullYear()}`
 }
 
-export function escapeHtml(str: string | null | undefined): string {
-  const div = document.createElement('div')
-  div.textContent = str || ''
-  return div.innerHTML
-}
-
 export function getWeekKey(tanggal: string): string {
   const [y, m, d] = tanggal.split('-').map(Number)
   const dateObj = new Date(y, m - 1, d)
@@ -72,13 +66,6 @@ export function getWeekKey(tanggal: string): string {
   const monObj = new Date(dateObj)
   monObj.setDate(dateObj.getDate() - dow)
   return `${monObj.getFullYear()}-${String(monObj.getMonth() + 1).padStart(2, '0')}-${String(monObj.getDate()).padStart(2, '0')}`
-}
-
-export function getDayName(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const dt = new Date(y, m - 1, d)
-  const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
-  return dayNames[dt.getDay()]
 }
 
 export function todayStr(): string {

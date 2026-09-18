@@ -2,10 +2,9 @@ import { useRef, useState } from 'react'
 import { Modal } from '../../components/Modal'
 import { Dropdown } from '../../components/Dropdown'
 import { CustomDatePicker } from '../../components/CustomDatePicker'
+import { colorForSubject } from '../../utils/subjectColors'
 import { useAppStore } from '../../store/appStore'
 import * as api from '../../api/client'
-
-const COLORS = ['#e91e63', '#9c27b0', '#3f51b5', '#009688', '#ff9800', '#795548', '#607d8b', '#f44336']
 
 export function AddTaskModal() {
   const isOpen = useAppStore((s) => s.isAddTaskModalOpen)
@@ -140,9 +139,9 @@ export function AddTaskModal() {
                       </div>
                       <div className="option-label">-- Kosongkan Mapel --</div>
                     </div>
-                    {filteredSubjects.map((sub, i) => (
+                    {filteredSubjects.map(sub => (
                       <div key={sub.id} className={`custom-select-option ${subject === sub.name ? 'selected' : ''}`} onClick={() => { setSubject(sub.name); close() }}>
-                        <div className="option-avatar" style={{ background: COLORS[i % COLORS.length] }}>{sub.name.charAt(0).toUpperCase()}</div>
+                        <div className="option-avatar" style={{ background: colorForSubject(sub.name) }}>{sub.name.charAt(0).toUpperCase()}</div>
                         <div className="option-label">{sub.name}</div>
                       </div>
                     ))}

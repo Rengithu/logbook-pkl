@@ -3,7 +3,7 @@ import { useAppStore } from '../../store/appStore'
 import { getWeekKey } from '../../utils/format'
 import * as api from '../../api/client'
 import { WeekGroup } from '../../components/entries/WeekGroup'
-import type { Task, Subject, Entry } from '../../types/index'
+import type { Task, Entry } from '../../types/index'
 
 function SelectionToolbar() {
   const selectedEntries = useAppStore((s) => s.selectedEntries)
@@ -113,7 +113,6 @@ export function EntriesPage() {
   const openAddEntryModal = useAppStore((s) => s.openAddEntryModal)
   const setEditingId = useAppStore((s) => s.setEditingId)
   const trashedTasks = useAppStore((s) => s.trashedTasks)
-  const trashedSubjects = useAppStore((s) => s.trashedSubjects)
 
   // 1. Daftar entri (tanpa filter — fitur pencarian tidak digunakan)
   const filteredEntries = currentEntries
@@ -149,7 +148,6 @@ export function EntriesPage() {
 
   // 3. Daftar item Tempat Sampah (tanpa filter — fitur pencarian tidak digunakan)
   const filteredTrashedTasks = trashedTasks || []
-  const filteredTrashedSubjects = trashedSubjects || []
 
   async function handleDeleteEntry(id: string, force = false) {
     try {
@@ -220,7 +218,7 @@ export function EntriesPage() {
           {filteredEntries.length === 0 && !isTrash && (
             <p className="empty-state">Belum ada catatan. Tambahkan catatan harian dengan tombol Plus di pojok kanan.</p>
           )}
-          {filteredEntries.length === 0 && isTrash && filteredTrashedTasks.length === 0 && filteredTrashedSubjects.length === 0 && (
+          {filteredEntries.length === 0 && isTrash && filteredTrashedTasks.length === 0 && (
             <p className="empty-state">Tempat sampah kosong.</p>
           )}
 
@@ -269,23 +267,6 @@ export function EntriesPage() {
               </div>
             </div>
           )}
-
-          {/* Trashed subjects */}
-          {isTrash && filteredTrashedSubjects.length > 0 && (
-            <div className="week-group-item expanded">
-              <div className="week-group-header" style={{ background: 'var(--bg-surface)' }}>
-                <div className="week-group-title" style={{ color: 'var(--primary)' }}>
-                  <span className="material-symbols-outlined">library_books</span>
-                  Mata Pelajaran Terhapus ({filteredTrashedSubjects.length})
-                </div>
-              </div>
-              <div className="week-group-body">
-                {filteredTrashedSubjects.map(s => (
-                  <TrashedSubjectItem key={s.id} subject={s} />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </section>
@@ -327,49 +308,6 @@ function TrashedTaskItem({ task }: { task: Task }) {
           <button className="btn btn-outline-primary btn-sm" onClick={handleRestore} title="Pulihkan">
             <span className="material-symbols-outlined">restore_from_trash</span>
             <span className="btn-label-desktop"> Pulihkan</span>
-          </button>
-          <button className="btn-icon btn-icon-danger" onClick={handleDeleteForever} title="Hapus Permanen">
-            <span className="material-symbols-outlined">delete_forever</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function TrashedSubjectItem({ subject }: { subject: Subject }) {
-  const showToast = useAppStore((s) => s.showToast)
-  const setTrashedSubjects = useAppStore((s) => s.setTrashedSubjects)
-  const setSubjects = useAppStore((s) => s.setSubjects)
-
-  async function handleRestore() {
-    try {
-      await api.restoreSubject(subject.id)
-      showToast('Mata pelajaran dipulihkan')
-      const updatedTrash = await api.getTrashedSubjects()
-      setTrashedSubjects(updatedTrash)
-      // Sinkronkan store utama agar mapel langsung tersedia lagi (dropdown tugas, dsb.)
-      const freshSubjects = await api.getSubjects()
-      setSubjects(freshSubjects)
-    } catch (e: any) { showToast(e.message, true) }
-  }
-  async function handleDeleteForever() {
-    try {
-      await api.deleteSubjectForever(subject.id)
-      showToast('Mata pelajaran permanen dihapus')
-      const updatedTrash = await api.getTrashedSubjects()
-      setTrashedSubjects(updatedTrash)
-    } catch (e: any) { showToast(e.message, true) }
-  }
-  return (
-    <div className="entry-day-item">
-      <div className="entry-header-row">
-        <div className="entry-header-left">
-          <h4 style={{ margin: 0, fontSize: 15, color: 'var(--fg-primary)' }}>{subject.name}</h4>
-        </div>
-        <div className="entry-header-right">
-          <button className="btn btn-outline-primary btn-sm" onClick={handleRestore} title="Pulihkan">
-            <span className="material-symbols-outlined">restore_from_trash</span> Pulihkan
           </button>
           <button className="btn-icon btn-icon-danger" onClick={handleDeleteForever} title="Hapus Permanen">
             <span className="material-symbols-outlined">delete_forever</span>

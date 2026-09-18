@@ -8,7 +8,6 @@ const exportRoutes = require('./src/routes/export');
 const aiRoutes = require('./src/routes/ai');
 const tasksRoutes = require('./src/routes/tasks');
 const subjectsRoutes = require('./src/routes/subjects');
-const contactsRoutes = require('./src/routes/contacts');
 const toolsRoutes = require('./src/routes/tools');
 const quickNotesRoutes = require('./src/routes/quickNotes');
 
@@ -26,7 +25,6 @@ app.use('/api/export', exportRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/subjects', subjectsRoutes);
-app.use('/api/contacts', contactsRoutes);
 app.use('/api/tools', toolsRoutes);
 app.use('/api/quick-notes', quickNotesRoutes);
 

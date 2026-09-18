@@ -80,8 +80,8 @@ export async function updateTask(id: string, data: any) {
     return res.json()
 }
 
-export async function deleteTask(id: string, force = false) {
-    const res = await apiFetch(`/tasks/${id}${force ? '?force=true' : ''}`, { method: 'DELETE' })
+export async function deleteTask(id: string) {
+    const res = await apiFetch(`/tasks/${id}`, { method: 'DELETE' })
     await assertOk(res, 'Gagal menghapus tugas')
     return res.json()
 }
@@ -108,12 +108,6 @@ export async function getEntries(week?: string) {
 export async function getTrashedEntries() {
     const res = await apiFetch('/entries/trash')
     await assertOk(res, 'Gagal memuat catatan di tempat sampah')
-    return res.json()
-}
-
-export async function getEntryWeeks() {
-    const res = await apiFetch('/entries/weeks')
-    await assertOk(res, 'Gagal memuat daftar minggu')
     return res.json()
 }
 
@@ -159,12 +153,6 @@ export async function getSubjects() {
     return res.json()
 }
 
-export async function getTrashedSubjects() {
-    const res = await apiFetch('/subjects/trash')
-    await assertOk(res, 'Gagal memuat mapel di tempat sampah')
-    return res.json()
-}
-
 export async function deleteSubject(id: string) {
     const res = await apiFetch(`/subjects/${id}`, { method: 'DELETE' })
     if (!res.ok) throw new Error((await res.json()).error || 'Gagal menghapus mapel')
@@ -174,12 +162,6 @@ export async function deleteSubject(id: string) {
 export async function deleteSubjectForever(id: string) {
     const res = await apiFetch(`/subjects/${id}/force`, { method: 'DELETE' })
     if (!res.ok) throw new Error((await res.json()).error || 'Gagal menghapus permanen')
-    return res.json()
-}
-
-export async function restoreSubject(id: string) {
-    const res = await apiFetch(`/subjects/${id}/restore`, { method: 'POST' })
-    await assertOk(res, 'Gagal memulihkan mapel')
     return res.json()
 }
 

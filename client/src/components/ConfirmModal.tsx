@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 
 interface ConfirmModalProps {
   message: string
@@ -27,42 +27,5 @@ export function ConfirmModal({ message, onConfirm, onCancel }: ConfirmModalProps
         </div>
       </div>
     </div>
-  )
-}
-
-// Hook for imperative confirm dialog usage
-let confirmResolve: ((value: boolean) => void) | null = null
-let setConfirmMessage: ((msg: string | null) => void) | null = null
-
-export function useConfirm() {
-  return async (message: string): Promise<boolean> => {
-    return new Promise<boolean>((resolve) => {
-      confirmResolve = resolve
-      setConfirmMessage?.(message)
-    })
-  }
-}
-
-export function ConfirmProvider() {
-  const [message, setMessage] = useState<string | null>(null)
-  
-  useEffect(() => {
-    setConfirmMessage = setMessage
-  }, [])
-
-  if (!message) return null
-
-  return (
-    <ConfirmModal
-      message={message}
-      onConfirm={() => {
-        confirmResolve?.(true)
-        setMessage(null)
-      }}
-      onCancel={() => {
-        confirmResolve?.(false)
-        setMessage(null)
-      }}
-    />
   )
 }

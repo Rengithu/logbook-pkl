@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Modal } from '../../components/Modal'
 import { CustomDropdown } from '../../components/CustomDropdown'
 import { CustomDatePicker } from '../../components/CustomDatePicker'
@@ -38,6 +38,14 @@ export function AddEntryModal() {
   // Quick Notes state
   const [quickNotes, setQuickNotes] = useState<QuickNote[]>([])
   const [generatingFromNotes, setGeneratingFromNotes] = useState(false)
+
+  // Pratinjau foto baru: URL dibuat sekali per perubahan daftar foto, dan
+  // di-revoke saat daftar berubah / modal ditutup / submit (mencegah memory leak)
+  const photoUrls = useMemo(() => photos.map(f => URL.createObjectURL(f)), [photos])
+
+  useEffect(() => {
+    return () => photoUrls.forEach(url => URL.revokeObjectURL(url))
+  }, [photoUrls])
   // ID catatan cepat yang tercentang untuk ditandai terpakai saat submit
   const [selectedNoteIds, setSelectedNoteIds] = useState<string[]>([])
 
@@ -312,7 +320,7 @@ export function AddEntryModal() {
               <div className="photo-preview-list">
                 {photos.map((file, i) => (
                   <div key={i} className="photo-chip">
-                    <img src={URL.createObjectURL(file)} alt="" title={file.name} />
+                    <img src={photoUrls[i]} alt="" title={file.name} />
                     <button type="button" className="remove-btn" onClick={() => setPhotos(photos.filter((_, j) => j !== i))}>
                       <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
                     </button>

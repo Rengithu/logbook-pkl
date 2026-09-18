@@ -7,7 +7,6 @@ import { Sidebar } from './components/Sidebar'
 import { RightSidebar } from './components/RightSidebar'
 const AiChatPanel = lazy(() => import('./components/AiChatPanel').then(module => ({ default: module.AiChatPanel })))
 import { Toast } from './components/Toast'
-import { ConfirmProvider } from './components/ConfirmModal'
 
 import { DashboardPage } from './features/dashboard/DashboardPage'
 import { EntriesPage } from './features/entries/EntriesPage'
@@ -29,7 +28,6 @@ function App() {
   const setTasks = useAppStore((s) => s.setTasks)
   const setSubjects = useAppStore((s) => s.setSubjects)
   const setTrashedTasks = useAppStore((s) => s.setTrashedTasks)
-  const setTrashedSubjects = useAppStore((s) => s.setTrashedSubjects)
   const setTrashedEntries = useAppStore((s) => s.setTrashedEntries)
 
   // Initialize app
@@ -61,12 +59,11 @@ function App() {
       Promise.all([
         api.getTrashedEntries().then(setTrashedEntries),
         api.getTrashedTasks().then(setTrashedTasks).catch(() => setTrashedTasks([])),
-        api.getTrashedSubjects().then(setTrashedSubjects).catch(() => setTrashedSubjects([])),
       ]).catch(() => { })
     } else {
       api.getEntries().then(setEntries).catch(() => { })
     }
-  }, [currentView, setEntries, setTrashedEntries, setTrashedTasks, setTrashedSubjects])
+  }, [currentView, setEntries, setTrashedEntries, setTrashedTasks])
 
   function renderActiveTab() {
     switch (activeTab) {
@@ -98,7 +95,6 @@ function App() {
       <AddEntryModal />
       <AddTaskModal />
       <ManageSubjectsModal />
-      <ConfirmProvider />
       <Toast />
     </>
   )

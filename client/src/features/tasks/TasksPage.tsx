@@ -1,10 +1,10 @@
 import { useRef } from 'react'
 import { useAppStore } from '../../store/appStore'
 import { Dropdown } from '../../components/Dropdown'
+import { colorForSubject } from '../../utils/subjectColors'
 import { formatTanggalIndo, todayStr } from '../../utils/format'
 import * as api from '../../api/client'
 
-const COLORS = ['#e91e63', '#9c27b0', '#3f51b5', '#009688', '#ff9800', '#795548', '#607d8b', '#f44336']
 const STATUS_ORDER: Record<string, number> = { 'todo': 1, 'in_progress': 2, 'done': 3 }
 
 export function TasksPage() {
@@ -136,7 +136,7 @@ function TaskRow({ task, onEdit, onDelete, onStatusToggle }: {
   onStatusToggle: () => void
 }) {
   const iconLetter = task.subject ? task.subject.charAt(0).toUpperCase() : 'T'
-  const iconColor = task.subject ? COLORS[task.subject.length % COLORS.length] : '#83a598'
+  const iconColor = task.subject ? colorForSubject(task.subject) : '#83a598'
   const subjectText = task.subject || '-'
 
   let statusBadge: React.ReactNode

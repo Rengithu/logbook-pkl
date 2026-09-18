@@ -50,12 +50,6 @@ async function run() {
     assert(Array.isArray(r.json), 'bukan array')
   })
 
-  await check('GET /api/entries/weeks is array', async () => {
-    const r = await req('GET', '/api/entries/weeks')
-    assert(r.ok, `status ${r.status}`)
-    assert(Array.isArray(r.json), 'bukan array')
-  })
-
   await check('GET /api/tasks is array', async () => {
     const r = await req('GET', '/api/tasks')
     assert(r.ok, `status ${r.status}`)

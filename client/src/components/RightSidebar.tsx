@@ -5,9 +5,9 @@ export function RightSidebar() {
   const openAddEntryModal = useAppStore((s) => s.openAddEntryModal)
   const openAddTaskModal = useAppStore((s) => s.openAddTaskModal)
   const openManageSubjectsModal = useAppStore((s) => s.openManageSubjectsModal)
-  const showToast = useAppStore((s) => s.showToast)
   const isAiChatOpen = useAppStore(s => s.isAiChatOpen)
   const toggleAiChat = useAppStore(s => s.toggleAiChat)
+  const setActiveTab = useAppStore((s) => s.setActiveTab)
   const [fabOpen, setFabOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(localStorage.getItem('pkl_right_sidebar_closed') === 'true')
 
@@ -24,17 +24,14 @@ export function RightSidebar() {
         <button className={`right-sidebar-icon ${isAiChatOpen ? 'active' : ''}`} title="AI Chat" onClick={toggleAiChat} style={{ flexShrink: 0, '--active-icon-color': 'var(--accent-green)' } as React.CSSProperties}>
           <span className="material-symbols-outlined" style={{ color: 'var(--accent-green)' }}>smart_toy</span>
         </button>
-        <button className="right-sidebar-icon" title="Kalender" onClick={() => showToast('Panel Kalender segera hadir!')} style={{ flexShrink: 0, '--active-icon-color': '#EA4335' } as React.CSSProperties}>
+        <button className="right-sidebar-icon" title="Kalender" onClick={() => setActiveTab('calendar')} style={{ flexShrink: 0, '--active-icon-color': '#EA4335' } as React.CSSProperties}>
           <span className="material-symbols-outlined" style={{ color: '#EA4335' }}>calendar_month</span>
         </button>
-        <button className="right-sidebar-icon" title="Catatan Cepat" onClick={() => showToast('Panel Catatan Cepat segera hadir!')} style={{ flexShrink: 0, '--active-icon-color': '#F4B400' } as React.CSSProperties}>
+        <button className="right-sidebar-icon" title="Catatan Cepat" onClick={() => setActiveTab('dashboard')} style={{ flexShrink: 0, '--active-icon-color': '#F4B400' } as React.CSSProperties}>
           <span className="material-symbols-outlined" style={{ color: '#F4B400' }}>lightbulb</span>
         </button>
-        <button className="right-sidebar-icon" title="Tugas Hari Ini" onClick={() => showToast('Panel Tugas segera hadir!')} style={{ flexShrink: 0, '--active-icon-color': '#0F9D58' } as React.CSSProperties}>
+        <button className="right-sidebar-icon" title="Tugas Hari Ini" onClick={() => setActiveTab('tasks')} style={{ flexShrink: 0, '--active-icon-color': '#0F9D58' } as React.CSSProperties}>
           <span className="material-symbols-outlined" style={{ color: '#0F9D58' }}>task_alt</span>
-        </button>
-        <button className="right-sidebar-icon" title="Kontak Penting" onClick={() => showToast('Panel Kontak segera hadir!')} style={{ flexShrink: 0, '--active-icon-color': '#1a73e8' } as React.CSSProperties}>
-          <span className="material-symbols-outlined" style={{ color: '#1a73e8' }}>person</span>
         </button>
       </div>
         <hr style={{ width: 24, border: 'none', borderTop: '1px solid var(--border)', margin: '8px 0', flexShrink: 0 }} />
@@ -62,21 +59,17 @@ export function RightSidebar() {
                   <span className="material-symbols-outlined" style={{ fontSize: 20, color: 'var(--accent-green)' }}>smart_toy</span>
                   <div className="option-label">AI Chat</div>
                 </div>
-                <div className="custom-select-option" onClick={() => { setFabOpen(false); showToast('Panel Kalender segera hadir!') }}>
+                <div className="custom-select-option" onClick={() => { setFabOpen(false); setActiveTab('calendar') }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#EA4335' }}>calendar_month</span>
                   <div className="option-label">Kalender</div>
                 </div>
-                <div className="custom-select-option" onClick={() => { setFabOpen(false); showToast('Panel Catatan Cepat segera hadir!') }}>
+                <div className="custom-select-option" onClick={() => { setFabOpen(false); setActiveTab('dashboard') }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#F4B400' }}>lightbulb</span>
                   <div className="option-label">Catatan Cepat</div>
                 </div>
-                <div className="custom-select-option" onClick={() => { setFabOpen(false); showToast('Panel Tugas segera hadir!') }}>
+                <div className="custom-select-option" onClick={() => { setFabOpen(false); setActiveTab('tasks') }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#0F9D58' }}>task_alt</span>
                   <div className="option-label">Tugas Hari Ini</div>
-                </div>
-                <div className="custom-select-option" onClick={() => { setFabOpen(false); showToast('Panel Kontak segera hadir!') }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#1a73e8' }}>person</span>
-                  <div className="option-label">Kontak Penting</div>
                 </div>
               </div>
             </div>

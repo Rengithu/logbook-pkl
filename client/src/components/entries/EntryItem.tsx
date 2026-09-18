@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAppStore } from '../../store/appStore'
 import { formatTanggalIndo } from '../../utils/format'
 import { getHoliday } from '../../utils/holidays'
 import type { Entry } from '../../types/index'
@@ -13,6 +14,7 @@ export function EntryItem({ entry, isTrash, isSelected, onToggleSelect, onEdit, 
   onRestore: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const showToast = useAppStore((s) => s.showToast)
   const hol = getHoliday(entry.tanggal)
 
   return (
@@ -103,7 +105,7 @@ export function EntryItem({ entry, isTrash, isSelected, onToggleSelect, onEdit, 
                       a.click()
                       URL.revokeObjectURL(url)
                     } catch (e: any) {
-                      alert(e.message)
+                      showToast(e.message, true)
                     }
                   }} title="Unduh Catatan">
                     <span className="material-symbols-outlined">download</span>

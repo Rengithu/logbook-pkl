@@ -17,18 +17,6 @@ router.get('/', (req, res) => {
   }
 });
 
-// GET trashed subjects
-router.get('/trash', (req, res) => {
-  try {
-    // Assuming we don't support trashed subjects anymore since SQLite schema didn't include it. 
-    // Return empty array for compatibility.
-    res.json([]);
-  } catch (error) {
-    console.error('Error fetching trashed subjects:', error);
-    res.status(500).json({ error: 'Gagal memuat mapel di tempat sampah.' });
-  }
-});
-
 // POST new subject
 router.post('/', (req, res) => {
   try {
@@ -132,12 +120,6 @@ router.delete('/:id/force', (req, res) => {
     console.error('Error force deleting subject:', error);
     res.status(500).json({ error: 'Gagal menghapus mapel permanen.' });
   }
-});
-
-// RESTORE subject
-router.post('/:id/restore', (req, res) => {
-  // Not supported anymore, return 404
-  res.status(404).json({ error: 'Tidak didukung.' });
 });
 
 module.exports = router;

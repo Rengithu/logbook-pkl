@@ -9,7 +9,6 @@ interface AppState {
     tasks: Task[]
     subjects: Subject[]
     trashedTasks: Task[]
-    trashedSubjects: Subject[]
     profile: Profile | null
     editingId: string | null
     editingTask: Task | null
@@ -20,7 +19,7 @@ interface AppState {
     // UI state
     activeTab: string
     currentView: string
-    toast: { id: number; message: string; isError?: boolean; action?: { label: string; onClick: () => void } } | null
+    toasts: { id: number; message: string; isError?: boolean; action?: { label: string; onClick: () => void } }[]
     isAddEntryModalOpen: boolean
     isAddTaskModalOpen: boolean
     isManageSubjectsModalOpen: boolean
@@ -38,7 +37,6 @@ interface AppState {
     setTasks: (tasks: Task[]) => void
     setSubjects: (subjects: Subject[]) => void
     setTrashedTasks: (tasks: Task[]) => void
-    setTrashedSubjects: (subjects: Subject[]) => void
     setProfile: (profile: Profile) => void
     setEditingId: (id: string | null) => void
     setTaskSort: (sort: string) => void
@@ -50,7 +48,7 @@ interface AppState {
     setActiveTab: (tab: string) => void
     setCurrentView: (view: string) => void
     showToast: (message: string, isError?: boolean, action?: { label: string; onClick: () => void }) => void
-    hideToast: () => void
+    hideToast: (id: number) => void
     openAddEntryModal: () => void
     closeAddEntryModal: () => void
     openAddTaskModal: (task?: Task) => void
@@ -75,7 +73,6 @@ export const useAppStore = create<AppState>((set) => ({
     tasks: [],
     subjects: [],
     trashedTasks: [],
-    trashedSubjects: [],
     profile: null,
     editingId: null,
     editingTask: null,
@@ -85,7 +82,7 @@ export const useAppStore = create<AppState>((set) => ({
     currentTheme: (localStorage.getItem('pkl_theme') as 'light' | 'dark' | 'system') || 'system',
     activeTab: 'dashboard',
     currentView: 'default',
-    toast: null,
+    toasts: [],
     isAddEntryModalOpen: false,
     isAddTaskModalOpen: false,
     isManageSubjectsModalOpen: false,
@@ -102,7 +99,6 @@ export const useAppStore = create<AppState>((set) => ({
     setTasks: (tasks) => set({ tasks }),
     setSubjects: (subjects) => set({ subjects }),
     setTrashedTasks: (trashedTasks) => set({ trashedTasks }),
-    setTrashedSubjects: (trashedSubjects) => set({ trashedSubjects }),
     setProfile: (profile) => set({ profile }),
     setEditingId: (editingId) => set({ editingId }),
     setTaskSort: (taskSort) => set({ taskSort }),
@@ -122,8 +118,12 @@ export const useAppStore = create<AppState>((set) => ({
     // UI actions
     setActiveTab: (activeTab) => set({ activeTab }),
     setCurrentView: (currentView) => set({ currentView }),
-    showToast: (message, isError, action) => set({ toast: { id: Date.now(), message, isError, action } }),
-    hideToast: () => set({ toast: null }),
+    showToast: (message, isError, action) => set((state) => {
+      const next = [...state.toasts, { id: Date.now(), message, isError, action }]
+      // Maksimal 4 toast tampil bersamaan — buang yang paling lama (paling depan)
+      return { toasts: next.length > 4 ? next.slice(next.length - 4) : next }
+    }),
+    hideToast: (id) => set((state) => ({ toasts: state.toasts.filter(t => t.id !== id) })),
     openAddEntryModal: () => set({ isAddEntryModalOpen: true }),
     closeAddEntryModal: () => set({ isAddEntryModalOpen: false, editingId: null }),
     openAddTaskModal: (task) => set({ isAddTaskModalOpen: true, editingTask: task || null }),
