@@ -34,6 +34,16 @@ async function processPhotos(files) {
   return processed;
 }
 
+// Parse kolom photos dengan aman — SATU baris korup tidak boleh menjatuhkan seluruh request
+function safeParsePhotos(raw) {
+  try {
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
@@ -62,8 +72,8 @@ const upload = multer({
 // List all entries (optionally filter by ?week=YYYY-MM-DD)
 router.get('/', (req, res) => {
   let entries = db.prepare('SELECT * FROM entries WHERE isDeleted = 0 ORDER BY tanggal DESC').all();
-  // Parse photos JSON strings
-  entries = entries.map(e => ({ ...e, photos: JSON.parse(e.photos || '[]') }));
+  // Parse photos JSON strings (aman terhadap data korup)
+  entries = entries.map(e => ({ ...e, photos: safeParsePhotos(e.photos) }));
   
   if (req.query.week) {
     entries = entries.filter((e) => weekKey(e.tanggal) === req.query.week);
@@ -90,112 +100,122 @@ router.get('/weeks', (req, res) => {
 // Get all deleted entries (trash)
 router.get('/trash', (req, res) => {
   let entries = db.prepare('SELECT * FROM entries WHERE isDeleted = 1 ORDER BY tanggal DESC').all();
-  entries = entries.map(e => ({ ...e, photos: JSON.parse(e.photos || '[]') }));
+  entries = entries.map(e => ({ ...e, photos: safeParsePhotos(e.photos) }));
   res.json(entries);
 });
 
 router.get('/:id', (req, res) => {
   const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(req.params.id);
   if (!entry) return res.status(404).json({ error: 'Entri tidak ditemukan' });
-  entry.photos = JSON.parse(entry.photos || '[]');
+  entry.photos = safeParsePhotos(entry.photos);
   res.json(entry);
 });
 
 router.post('/', upload.array('photos', 10), async (req, res) => {
-  const { tanggal, kegiatan } = req.body;
+  try {
+    const { tanggal, kegiatan } = req.body;
 
-  if (!tanggal || !isValidDateStr(tanggal)) {
-    return res.status(400).json({ error: 'Format tanggal tidak valid' });
-  }
-  if (!kegiatan || !String(kegiatan).trim()) {
-    return res.status(400).json({ error: 'Kegiatan tidak boleh kosong' });
-  }
-  const trimmedKegiatan = String(kegiatan).trim();
+    if (!tanggal || !isValidDateStr(tanggal)) {
+      return res.status(400).json({ error: 'Format tanggal tidak valid' });
+    }
+    if (!kegiatan || !String(kegiatan).trim()) {
+      return res.status(400).json({ error: 'Kegiatan tidak boleh kosong' });
+    }
+    const trimmedKegiatan = String(kegiatan).trim();
 
-  // Guard: reject duplicate entry for the same date
-  const existing = db.prepare('SELECT id FROM entries WHERE tanggal = ? AND isDeleted = 0').get(tanggal);
-  if (existing) {
-    return res.status(409).json({ error: 'Catatan untuk tanggal ini sudah ada. Silakan edit catatan yang sudah ada.' });
-  }
+    // Guard: reject duplicate entry for the same date
+    const existing = db.prepare('SELECT id FROM entries WHERE tanggal = ? AND isDeleted = 0').get(tanggal);
+    if (existing) {
+      return res.status(409).json({ error: 'Catatan untuk tanggal ini sudah ada. Silakan edit catatan yang sudah ada.' });
+    }
 
-  const photos = await processPhotos(req.files || []);
-  const entry = {
-    id: uuidv4(),
-    tanggal,
-    hari: namaHari(tanggal),
-    kegiatan: trimmedKegiatan,
-    photos,
-    createdAt: dayjs().toISOString()
-  };
-  
-  db.prepare(`
-    INSERT INTO entries (id, tanggal, hari, kegiatan, photos, createdAt, isDeleted)
-    VALUES (?, ?, ?, ?, ?, ?, 0)
-  `).run(entry.id, entry.tanggal, entry.hari, entry.kegiatan, JSON.stringify(entry.photos), entry.createdAt);
-  
-  res.status(201).json(entry);
+    const photos = await processPhotos(req.files || []);
+    const entry = {
+      id: uuidv4(),
+      tanggal,
+      hari: namaHari(tanggal),
+      kegiatan: trimmedKegiatan,
+      photos,
+      createdAt: dayjs().toISOString()
+    };
+
+    db.prepare(`
+      INSERT INTO entries (id, tanggal, hari, kegiatan, photos, createdAt, isDeleted)
+      VALUES (?, ?, ?, ?, ?, ?, 0)
+    `).run(entry.id, entry.tanggal, entry.hari, entry.kegiatan, JSON.stringify(entry.photos), entry.createdAt);
+
+    res.status(201).json(entry);
+  } catch (err) {
+    console.error('Error saving entry:', err);
+    res.status(500).json({ error: 'Gagal menyimpan catatan' });
+  }
 });
 
 router.put('/:id', upload.array('photos', 10), async (req, res) => {
-  const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(req.params.id);
-  if (!entry) return res.status(404).json({ error: 'Entri tidak ditemukan' });
-  
-  entry.photos = JSON.parse(entry.photos || '[]');
+  try {
+    const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(req.params.id);
+    if (!entry) return res.status(404).json({ error: 'Entri tidak ditemukan' });
 
-  const { tanggal, kegiatan, removePhotos } = req.body;
+    entry.photos = safeParsePhotos(entry.photos);
 
-  // Validasi opsional — hanya jika field dikirim
-  if (tanggal !== undefined && !isValidDateStr(tanggal)) {
-    return res.status(400).json({ error: 'Format tanggal tidak valid' });
-  }
-  if (kegiatan !== undefined && !String(kegiatan ?? '').trim()) {
-    return res.status(400).json({ error: 'Kegiatan tidak boleh kosong' });
-  }
+    const { tanggal, kegiatan, removePhotos } = req.body;
 
-  // Guard duplikat tanggal (sama seperti POST), kecuali entry yang sedang diedit sendiri
-  const effectiveTanggal = tanggal || entry.tanggal;
-  const duplicate = db.prepare('SELECT id FROM entries WHERE tanggal = ? AND isDeleted = 0 AND id != ?').get(effectiveTanggal, entry.id);
-  if (duplicate) {
-    return res.status(409).json({ error: 'Catatan untuk tanggal ini sudah ada. Silakan edit catatan yang sudah ada.' });
-  }
-
-  let photos = entry.photos || [];
-
-  if (removePhotos) {
-    let toRemove;
-    try {
-      toRemove = JSON.parse(removePhotos);
-    } catch {
-      return res.status(400).json({ error: 'Format removePhotos tidak valid' });
+    // Validasi opsional — hanya jika field dikirim
+    if (tanggal !== undefined && !isValidDateStr(tanggal)) {
+      return res.status(400).json({ error: 'Format tanggal tidak valid' });
     }
-    if (!Array.isArray(toRemove)) {
-      return res.status(400).json({ error: 'removePhotos harus berupa array' });
+    if (kegiatan !== undefined && !String(kegiatan ?? '').trim()) {
+      return res.status(400).json({ error: 'Kegiatan tidak boleh kosong' });
     }
-    toRemove = toRemove.filter((f) => typeof f === 'string' && f === path.basename(f) && !f.includes('..'));
-    photos = photos.filter((p) => !toRemove.includes(p));
-    toRemove.forEach((filename) => {
-      const p = path.join(UPLOADS_DIR, filename);
-      if (fs.existsSync(p)) fs.unlinkSync(p);
-    });
-  }
-  
-  const newPhotos = await processPhotos(req.files || []);
-  photos = [...photos, ...newPhotos];
 
-  const updated = {
-    ...entry,
-    tanggal: effectiveTanggal,
-    hari: namaHari(effectiveTanggal),
-    kegiatan: kegiatan !== undefined ? String(kegiatan).trim() : entry.kegiatan,
-    photos
-  };
-  
-  db.prepare(`
-    UPDATE entries SET tanggal = ?, hari = ?, kegiatan = ?, photos = ?
-    WHERE id = ?
-  `).run(updated.tanggal, updated.hari, updated.kegiatan, JSON.stringify(updated.photos), updated.id);
-  
-  res.json(updated);
+    // Guard duplikat tanggal (sama seperti POST), kecuali entry yang sedang diedit sendiri
+    const effectiveTanggal = tanggal || entry.tanggal;
+    const duplicate = db.prepare('SELECT id FROM entries WHERE tanggal = ? AND isDeleted = 0 AND id != ?').get(effectiveTanggal, entry.id);
+    if (duplicate) {
+      return res.status(409).json({ error: 'Catatan untuk tanggal ini sudah ada. Silakan edit catatan yang sudah ada.' });
+    }
+
+    let photos = entry.photos || [];
+
+    if (removePhotos) {
+      let toRemove;
+      try {
+        toRemove = JSON.parse(removePhotos);
+      } catch {
+        return res.status(400).json({ error: 'Format removePhotos tidak valid' });
+      }
+      if (!Array.isArray(toRemove)) {
+        return res.status(400).json({ error: 'removePhotos harus berupa array' });
+      }
+      toRemove = toRemove.filter((f) => typeof f === 'string' && f === path.basename(f) && !f.includes('..'));
+      photos = photos.filter((p) => !toRemove.includes(p));
+      toRemove.forEach((filename) => {
+        const p = path.join(UPLOADS_DIR, filename);
+        if (fs.existsSync(p)) fs.unlinkSync(p);
+      });
+    }
+
+    const newPhotos = await processPhotos(req.files || []);
+    photos = [...photos, ...newPhotos];
+
+    const updated = {
+      ...entry,
+      tanggal: effectiveTanggal,
+      hari: namaHari(effectiveTanggal),
+      kegiatan: kegiatan !== undefined ? String(kegiatan).trim() : entry.kegiatan,
+      photos
+    };
+
+    db.prepare(`
+      UPDATE entries SET tanggal = ?, hari = ?, kegiatan = ?, photos = ?
+      WHERE id = ?
+    `).run(updated.tanggal, updated.hari, updated.kegiatan, JSON.stringify(updated.photos), updated.id);
+
+    res.json(updated);
+  } catch (err) {
+    console.error('Error updating entry:', err);
+    res.status(500).json({ error: 'Gagal menyimpan catatan' });
+  }
 });
 
 router.put('/:id/restore', (req, res) => {
@@ -209,7 +229,7 @@ router.delete('/:id', (req, res) => {
   if (!entry) return res.status(404).json({ error: 'Entri tidak ditemukan' });
   
   if (req.query.force === 'true') {
-    const photos = JSON.parse(entry.photos || '[]');
+    const photos = safeParsePhotos(entry.photos);
     photos.forEach((filename) => {
       const p = path.join(UPLOADS_DIR, filename);
       if (fs.existsSync(p)) fs.unlinkSync(p);

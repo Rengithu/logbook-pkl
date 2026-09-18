@@ -27,6 +27,17 @@ export function QuickNoteWidget() {
     return () => window.removeEventListener('quicknote:created', handleQuickNoteCreated)
   }, [])
 
+  // Refresh otomatis kalau catatan cepat baru saja ditandai terpakai (dari AddEntryModal saat submit)
+  useEffect(() => {
+    function handleQuickNoteUsed() {
+      apiClient.getQuickNotes(todayStr())
+        .then(setNotes)
+        .catch(() => {/* silently ignore */})
+    }
+    window.addEventListener('quicknote:used', handleQuickNoteUsed)
+    return () => window.removeEventListener('quicknote:used', handleQuickNoteUsed)
+  }, [])
+
   async function handleSave() {
     if (!inputText.trim()) return
     setSaving(true)

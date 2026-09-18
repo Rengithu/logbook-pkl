@@ -8,10 +8,20 @@ const { generateWeekDocx } = require('../generators/docxWeek');
 const { generateDayPdf, generateCombinedPdf } = require('../generators/pdfDay');
 const { generateWeekPdf } = require('../generators/pdfWeek');
 
+// Parse kolom photos dengan aman — SATU baris korup tidak boleh menjatuhkan seluruh request
+function safeParsePhotos(raw) {
+  try {
+    const parsed = JSON.parse(raw || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function getWeekEntries(wk) {
   const dbEntries = db.prepare('SELECT * FROM entries WHERE isDeleted = 0').all();
   return dbEntries.filter(e => weekKey(e.tanggal) === wk).map(e => {
-    if (e.photos) e.photos = JSON.parse(e.photos);
+    e.photos = safeParsePhotos(e.photos);
     return e;
   });
 }
@@ -22,7 +32,7 @@ function getProfile() {
 
 router.get('/day/:id/docx', async (req, res) => {
   const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(req.params.id);
-  if (entry && entry.photos) entry.photos = JSON.parse(entry.photos);
+  if (entry) entry.photos = safeParsePhotos(entry.photos);
   if (!entry || entry.isDeleted) return res.status(404).json({ error: 'Entri tidak ditemukan' });
   try {
     const buffer = await generateDayDocx(getProfile(), entry);
@@ -37,7 +47,7 @@ router.get('/day/:id/docx', async (req, res) => {
 
 router.get('/day/:id/pdf', async (req, res) => {
   const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(req.params.id);
-  if (entry && entry.photos) entry.photos = JSON.parse(entry.photos);
+  if (entry) entry.photos = safeParsePhotos(entry.photos);
   if (!entry || entry.isDeleted) return res.status(404).json({ error: 'Entri tidak ditemukan' });
   try {
     const buffer = await generateDayPdf(getProfile(), entry);
@@ -139,7 +149,7 @@ router.post('/batch/pdf', async (req, res) => {
   const profile = getProfile();
   const entries = ids.map(id => {
     const entry = db.prepare('SELECT * FROM entries WHERE id = ? AND isDeleted = 0').get(id);
-    if (entry && entry.photos) entry.photos = JSON.parse(entry.photos);
+    if (entry) entry.photos = safeParsePhotos(entry.photos);
     return entry;
   }).filter(Boolean);
 
@@ -227,7 +237,7 @@ router.post('/batch/preview', async (req, res) => {
   const profile = getProfile();
   const entries = ids.map(id => {
     const entry = db.prepare('SELECT * FROM entries WHERE id = ? AND isDeleted = 0').get(id);
-    if (entry && entry.photos) entry.photos = JSON.parse(entry.photos);
+    if (entry) entry.photos = safeParsePhotos(entry.photos);
     return entry;
   }).filter(Boolean);
 

@@ -27,6 +27,10 @@ export function AddEntryModal() {
   const [removedPhotos, setRemovedPhotos] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const isSubmittingRef = useRef(false)
+  // Teks sebelum overwrite AI terakhir — untuk tombol "Urungkan".
+  // Disimpan sebagai ref (bukan state): closure toast akan stale pada skenario
+  // dobel-klik AI, dan state yang tak pernah dibaca akan ditolak noUnusedLocals.
+  const previousKegiatanRef = useRef('')
   const [aiLoading, setAiLoading] = useState(false)
   const [aiStatus, setAiStatus] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -34,6 +38,8 @@ export function AddEntryModal() {
   // Quick Notes state
   const [quickNotes, setQuickNotes] = useState<QuickNote[]>([])
   const [generatingFromNotes, setGeneratingFromNotes] = useState(false)
+  // ID catatan cepat yang tercentang untuk ditandai terpakai saat submit
+  const [selectedNoteIds, setSelectedNoteIds] = useState<string[]>([])
 
   const editingEntry = editingId ? entries.find(e => e.id === editingId) : null
   const isEditing = !!editingEntry
@@ -45,7 +51,11 @@ export function AddEntryModal() {
       return
     }
     apiClient.getQuickNotes(tanggal)
-      .then(setQuickNotes)
+      .then(notes => {
+        setQuickNotes(notes)
+        // Default: belum ada yang tercentang sampai user memakai Generate
+        setSelectedNoteIds([])
+      })
       .catch(() => setQuickNotes([]))
   }, [isOpen, tanggal])
 
@@ -62,6 +72,7 @@ export function AddEntryModal() {
     setRemovedPhotos([])
     setAiStatus('')
     setQuickNotes([])
+    setSelectedNoteIds([])
     onClose()
   }
 
@@ -87,9 +98,14 @@ export function AddEntryModal() {
     setAiStatus('Sedang menyusun ulang teks dengan AI...')
     try {
       const result = await apiClient.aiRephrase(kegiatan)
+      // Simpan kondisi SEBELUM overwrite terakhir agar bisa di-Urungkan
+      previousKegiatanRef.current = kegiatan
       setKegiatan(result.text)
       setAiStatus('Selesai — periksa lagi hasilnya sebelum disimpan.')
-      showToast('Teks berhasil dibuat variasi oleh AI')
+      showToast('Teks berhasil dibuat variasi oleh AI', false, {
+        label: 'Urungkan',
+        onClick: () => setKegiatan(previousKegiatanRef.current),
+      })
     } catch (e: any) {
       setAiStatus(e.message)
       showToast(e.message, true)
@@ -104,9 +120,16 @@ export function AddEntryModal() {
     setAiStatus('Sedang menggabungkan catatan cepat dengan AI...')
     try {
       const result = await apiClient.aiGenerateFromNotes(quickNotes.map(n => n.teks))
+      // Simpan kondisi SEBELUM overwrite terakhir agar bisa di-Urungkan
+      previousKegiatanRef.current = kegiatan
       setKegiatan(result.text)
+      // User baru memakai Generate → centang semua catatan yang tersedia
+      setSelectedNoteIds(quickNotes.map(n => n.id))
       setAiStatus('Selesai — periksa dan edit hasilnya sebelum disimpan.')
-      showToast('Paragraf berhasil digenerate dari catatan cepat')
+      showToast('Paragraf berhasil digenerate dari catatan cepat', false, {
+        label: 'Urungkan',
+        onClick: () => setKegiatan(previousKegiatanRef.current),
+      })
     } catch (e: any) {
       setAiStatus(e.message)
       showToast(e.message, true)
@@ -128,9 +151,11 @@ export function AddEntryModal() {
         await apiClient.createEntry({ tanggal, kegiatan, photos })
         showToast('Catatan berhasil disimpan')
       }
-      // Mark quick notes as used (if any were loaded)
-      if (quickNotes.length > 0) {
-        apiClient.markQuickNotesUsed(quickNotes.map(n => n.id)).catch(console.error)
+      // Mark quick notes as used — HANYA yang tercentang oleh user
+      if (selectedNoteIds.length > 0) {
+        apiClient.markQuickNotesUsed(selectedNoteIds)
+          .then(() => window.dispatchEvent(new CustomEvent('quicknote:used')))
+          .catch((err: any) => showToast('Gagal menandai catatan cepat sebagai terpakai: ' + err.message, true))
       }
       // Reload entries
       const data = await apiClient.getEntries()
@@ -191,7 +216,20 @@ export function AddEntryModal() {
                 </div>
                 <ul className="quick-notes-section-list">
                   {quickNotes.map(note => (
-                    <li key={note.id} className="quick-notes-section-item">{note.teks}</li>
+                    <li key={note.id} className="quick-notes-section-item" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedNoteIds.includes(note.id)}
+                        onChange={e => {
+                          setSelectedNoteIds(prev =>
+                            e.target.checked ? [...prev, note.id] : prev.filter(id => id !== note.id)
+                          )
+                        }}
+                        aria-label={`Tandai catatan ini terpakai: ${note.teks}`}
+                        style={{ flexShrink: 0, accentColor: 'var(--primary)' }}
+                      />
+                      <span style={{ flex: 1 }}>{note.teks}</span>
+                    </li>
                   ))}
                 </ul>
                 <button
